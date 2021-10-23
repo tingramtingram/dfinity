@@ -1,0 +1,35 @@
+{
+  "canisters": {
+    "tingram": {
+      "main": "src/tingram/main.mo",
+      "type": "motoko"
+    },
+    "tingram_assets": {
+      "dependencies": [
+        "tingram"
+      ],
+      "frontend": {
+        "entrypoint": "src/tingram_assets/src/index.html"
+      },
+      "source": [
+        "src/tingram_assets/assets",
+        "dist/tingram_assets/"
+      ],
+      "type": "assets"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "dfx": "0.8.3",
+  "networks": {
+    "local": {
+      "bind": "127.0.0.1:8000",
+      "type": "ephemeral"
+    }
+  },
+  "version": 1
+}
