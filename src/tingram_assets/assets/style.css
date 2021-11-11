@@ -220,9 +220,9 @@ section.readme .count_slide .dot.active {
 }
 
 section.readme .tabs_wrap {
-    width: 400px;
+    width: 375px;
     height: auto;
-    overflow: hidden;
+    /* overflow: hidden; */
 }
 
 section.readme .tabs_wrap .roll {
@@ -232,8 +232,8 @@ section.readme .tabs_wrap .roll {
 
 section.readme .tab {
     transition: .4s;
-    width: 400px;
-    min-width: 400px;
+    width: 375px;
+    min-width: 375px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -634,3 +634,115 @@ span.haveAcc a:hover {
         background-color: transparent;
     }
 }
+
+/* ?? PROFILE  */
+
+
+
+
+
+
+
+.tab.profile .firs_logo {
+    position: relative;
+}
+
+.tab.profile .firs_logo .gear {
+    position: absolute;
+    right: 30px;
+    top: 3px;
+    cursor: pointer;
+}
+
+.tab.profile .firs_logo .gear:hover {
+    opacity: .8;
+}
+
+.tab.profile .firs_logo .crown {
+    position: absolute;
+    left: 30px;
+    top: 3px;
+}
+
+.profile_information {
+    display: flex;
+    width: 100%;
+    margin-top: 30px;
+}
+
+.profile_information .left {
+  border: 1px solid red;  
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.profile_information .right {
+    border: 1px solid red; 
+    flex: 1;
+}
+
+.profile_information .left .photo_box {
+    width: 80px;
+    height: 80px;
+    /* border: 1px solid green; */
+    position: relative;
+}
+
+.profile_information .left .photo_box > img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+}
+
+.profile_information .left .photo_box .upload {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    bottom: 0;
+    right: 0px;
+}
+
+.profile_information .left .photo_box .upload:hover {
+    opacity: .8;
+}
+
+.profile_information .left .photo_box .upload > img {
+    width: 32px;
+    height: 32px;
+}
+
+
+.profile_information .left .name_age_box {
+    display: flex;
+    margin-top: 8px;
+}
+
+.profile_information .left .name_age_box span.name {
+    font-family: Acrom;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 15px;
+    line-height: 18px;
+    color: white;
+}
+
+.profile_information .left .name_age_box span.age {
+    font-family: Acrom;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 15px;
+    line-height: 18px;
+    color: white;
+}
+
+.profile_information .left .premium_button {
+    margin-top: 20px;
+}
+

@@ -1,5 +1,5 @@
-import { AuthClient } from "@dfinity/auth-client";
-import { Actor, HttpAgent } from "@dfinity/agent";
+// import { AuthClient } from "@dfinity/auth-client";
+// import { Actor, HttpAgent } from "@dfinity/agent";
 
 
 
@@ -69,11 +69,20 @@ logOut.addEventListener('click', async function() {
 
 setTimeout(() => {
     fadeOut(hi, 10)
-}, 2000);
+// }, 2000);
+}, 1);
 
 setTimeout(() => {
     runRoll();
-}, 3000);
+    runRoll();
+    runRoll();
+    runRoll();
+    runRoll();
+    runRoll();
+    runRoll();
+    runRoll();
+// }, 3000);
+}, 1);
 
 function fadeOut(element, time) {
     let opacity = 0.99;
@@ -96,12 +105,12 @@ tabsButtons.forEach((el) => {
 });
 
 function runRollBack() {
-    offset -= 400;
+    offset -= 375;
     roll.style.transform = 'translateX(-'+ offset +'px)';
 }
 
 function runRoll() {
-    offset += 400;
+    offset += 375;
     paginationBtns += 1;
     roll.style.transform = 'translateX(-'+ offset +'px)';
     paginationDots.forEach((x) => {
