@@ -671,7 +671,7 @@ span.haveAcc a:hover {
 }
 
 .profile_information .left {
-  border: 1px solid red;  
+  /* border: 1px solid red;   */
   width: 50%;
   display: flex;
   flex-direction: column;
@@ -679,8 +679,11 @@ span.haveAcc a:hover {
 }
 
 .profile_information .right {
-    border: 1px solid red; 
+    /* border: 1px solid red;  */
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .profile_information .left .photo_box {
@@ -745,4 +748,166 @@ span.haveAcc a:hover {
 .profile_information .left .premium_button {
     margin-top: 20px;
 }
+
+.profile_information .left .premium_button:hover {
+    opacity: .8;
+}
+
+.profile_information .right .balance {
+    background-color: #080808;
+    padding: 6px 8px;
+    border-radius: 8px;
+}
+
+
+.profile_information .right .balance > span {
+    font-family: Acrom;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 16px;
+    line-height: 19px;
+    color: #999999;
+}
+
+
+.profile_information .right .balance .main_balance {
+    display: flex;
+    align-items: center;
+    margin-top: 6px;
+}
+
+.profile_information .right .balance .main_balance span {
+    font-family: Acrom;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 18px;
+    line-height: 22px;
+    color: #FFFFFF;
+}
+
+.profile_information .right .balance .main_balance img {
+    margin-right: 6px;
+}
+
+
+
+ /* stat  */
+
+ .profile_information .right .statiistics {
+     text-decoration: none;
+     display: flex;
+     align-items: center;
+     margin-top: 20px;
+ }
+
+ .profile_information .right .statiistics:hover {
+     opacity: .8;
+ }
+
+ .profile_information .right .statiistics > img {
+     margin-right: 15px;
+ }
+
+.profile_information .right .statiistics .text {
+
+}
+.profile_information .right .statiistics .text p {
+    font-family: Acrom;
+    font-style: normal;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 19px;
+    color: #FFFFFF;
+    margin: 0;
+}
+
+.profile_information .right .statiistics .text span {
+    font-family: Acrom;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 14px;
+    line-height: 17px;
+    color: #3282FF;
+}
+
+
+/* add coins  */
+
+.profile_information .right .add_coins {
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.profile_information .right .add_coins:hover {
+    opacity: .8;
+}
+
+.profile_information .right .add_coins > img {
+    margin-right: 15px;
+}
+
+.profile_information .right .add_coins .text {
+
+}
+.profile_information .right .add_coins .text p {
+   font-family: Acrom;
+   font-style: normal;
+   font-weight: 500;
+   font-size: 16px;
+   line-height: 19px;
+   color: #FFFFFF;
+   margin: 0;
+}
+
+.profile_information .right .add_coins .text span {
+   font-family: Acrom;
+   font-style: normal;
+   font-weight: normal;
+   font-size: 14px;
+   line-height: 17px;
+   color: #4ECE53;
+}
+
+
+
+.profile_tabs_photos {
+    width: 100%;
+    margin-top: 16px;
+    border-top: 1px solid #181818;
+    display: flex;
+    border-bottom: 1px solid #181818;
+}
+
+.profile_tabs_photos .change.photos {
+    height: 50px;
+    width: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.profile_tabs_photos .change.videos {
+    height: 50px;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.profile_tabs_photos .change img {
+    filter: invert(41%) sepia(4%) saturate(9%) hue-rotate(319deg) brightness(96%) contrast(81%);
+}
+
+.profile_tabs_photos .change.active img {
+    filter: none;
+}
+
+.profile_tabs_photos .change:hover {
+    opacity: .8;
+}
+
 
