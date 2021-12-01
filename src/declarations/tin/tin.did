@@ -1,0 +1,18 @@
+type UserUpdate = record {userData: UserData;};
+type UserData = 
+ record {
+   dateOfBirth: opt text;
+   name: opt text;
+   profilePhotos: vec opt text;
+ };
+type User = 
+ record {
+   id: principal;
+   userData: UserData;
+ };
+service : {
+  create: (UserUpdate) -> (text);
+  delete: () -> (bool);
+  read: () -> (opt User);
+  update: (User) -> (bool);
+}
