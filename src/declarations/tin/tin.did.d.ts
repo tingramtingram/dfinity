@@ -11,4 +11,5 @@ export interface _SERVICE {
   'delete' : () => Promise<boolean>,
   'read' : () => Promise<[] | [User]>,
   'update' : (arg_0: User) => Promise<boolean>,
+  'whoami' : () => Promise<Principal>,
 }

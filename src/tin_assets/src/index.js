@@ -1,8 +1,9 @@
+
 import { AuthClient } from "@dfinity/auth-client";
 import { Actor, HttpAgent } from "@dfinity/agent";
-import { tin } from "../../declarations/tin";
+// import { tin } from "../../declarations/tin";
+import { tin, canisterId, createActor } from "../../declarations/tin";
 import { setUncaughtExceptionCaptureCallback } from "process";
-
 
 
 
@@ -31,7 +32,61 @@ let newName            = document.querySelector('input.newName');
 let newBirthDate       = document.querySelector('input.newDate');
 let ifProfile         = document.querySelectorAll('.ifProfile');
 
+
+
+
+
 let authClient;
+let actor;
+let identity;
+
+const init = async () => {
+    preloaderOn();
+    authClient = await AuthClient.create();
+
+    if (await authClient.isAuthenticated()) {
+        handleAuthenticated(authClient);
+        preloaderOff();
+        tabReadme.forEach((el) => {
+            el.remove();
+        });
+    } 
+    preloaderOff();
+    
+    variantDfinity.onclick = async () => {
+        preloaderOn();
+      await authClient.login({
+        onSuccess: async () => {
+            runRoll();
+          handleAuthenticated(authClient);
+          preloaderOff();
+          console.log('login succes');
+        },
+      });
+    };
+  };
+
+  async function handleAuthenticated(authClient) {
+    identity = await authClient.getIdentity();
+
+    actor = createActor(canisterId, {
+        agentOptions: {
+          identity,
+        },
+      });
+
+      let who = await actor.whoami();
+      console.log(who.toString());
+
+      getProfile(1, who);
+    }
+init();
+
+
+
+
+
+
 
 function preloaderOn() {
     preloader.classList.add('active');
@@ -41,53 +96,63 @@ function preloaderOff() {
     preloader.classList.remove('active');
 };
 
-const init = async () => {
-    authClient = await AuthClient.create();
-    console.log(authClient.isAuthenticated());
-    if (await authClient.isAuthenticated()) {
-        handleAuthenticated(authClient);
-        tabReadme.forEach((el) => {
-            el.remove();
-        });
-    } 
-    
-  
-    variantDfinity.onclick = async () => {
-      await authClient.login({
-        onSuccess: async () => {
-            runRoll();
-          handleAuthenticated(authClient);
-          console.log('успешно вошли и переходим к заполнению профиля');
-        },
-      });
-    };
-  };
 
-
-  async function handleAuthenticated(authClient) {
-    const identity = await authClient.getIdentity();
-    const agent = new HttpAgent({ identity }); 
-
-}
-init();
 
 gear.addEventListener('click', async function() {
-    preloaderOn();
-    let res = await tin.delete();
-    if (await authClient.isAuthenticated()) {
-        authClient.logout();
+
+    let settingsModal = document.querySelector('.settings_modal');
+    let logOutBtn = settingsModal.querySelector('.logout');
+    let deleteBtn = settingsModal.querySelector('.delete');
+    if (settingsModal.classList.contains('active')) {
+        settingsModal.classList.remove('active');
+    } else {
+        settingsModal.classList.add('active');
     }
-    preloaderOff();
-    console.log(res);
-    location.reload();
+    logOutBtn.addEventListener('click', async function() {
+        if (await authClient.isAuthenticated()) {
+            authClient.logout();
+            location.reload();
+        }
+    });
+    deleteBtn.addEventListener('click', async function() {
+        preloaderOn();
+        let res = await actor.delete();
+        preloaderOff();
+        location.reload();
+    });
+
+    // console.log(res);
+    // location.reload();
 });
 
-async function getProfile(rollBacks) {
+async function getProfile(rollBacks, principal) {
     preloaderOn();
-    let res = await tin.read();
+    let res = await actor.read();
     preloaderOff();
-    if (res.length > 0) {
+    let principalString = principal.toString();
 
+    let lastPrincipal = principalString.slice(-3);
+    let firstPrincipal = principalString.substring(0, 5);
+    console.log('firstPincipal:' + firstPrincipal);
+    console.log('lastPrincipal laset:' + lastPrincipal);
+    let miniPrincipal = firstPrincipal + "..." + lastPrincipal;
+
+    if (res.length > 0) {
+        let principalP = document.querySelector('.principal p');
+        if (principal !== null) {
+            principalP.setAttribute('full', principalString);
+            principalP.innerHTML = miniPrincipal;
+
+
+            let principalItem = document.querySelector('.principal');
+            principalItem.addEventListener('click', function() {
+                let full = principalP.getAttribute('full');
+                console.log(full);
+                navigator.clipboard.writeText(full);
+            });
+            
+        }
+        paginationWrapper.remove();
         console.log(res);
         let name = document.querySelector('.name_age_box .name');
         let dateOfBirth = document.querySelector('.name_age_box .age');
@@ -119,7 +184,7 @@ async function getProfile(rollBacks) {
     };
 };
 
-getProfile(1);
+
 
 createUser.addEventListener('click', async function() {
     preloaderOn();
@@ -141,10 +206,12 @@ createUser.addEventListener('click', async function() {
             profilePhotos : photosArray
         }
     };
-    let res = await tin.create(userData);
+    let res = await actor.create(userData);
     console.log(res);
+    
+    let who = await actor.whoami();
     preloaderOff();
-    getProfile(3);
+    getProfile(3, who);
     runRoll();
 });
 
@@ -186,7 +253,7 @@ tabsButtons.forEach((el) => {
 
 async function runRollBack() {
     preloaderOn();
-    let res = await tin.read();
+    let res = await actor.read();
     preloaderOff();
     console.log(res);
     offset -= 375;

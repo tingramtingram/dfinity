@@ -11,6 +11,7 @@ export const idlFactory = ({ IDL }) => {
     'delete' : IDL.Func([], [IDL.Bool], []),
     'read' : IDL.Func([], [IDL.Opt(User)], []),
     'update' : IDL.Func([User], [IDL.Bool], []),
+    'whoami' : IDL.Func([], [IDL.Principal], []),
   });
 };
 export const init = ({ IDL }) => { return []; };

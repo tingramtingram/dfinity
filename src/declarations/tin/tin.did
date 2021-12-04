@@ -15,4 +15,5 @@ service : {
   delete: () -> (bool);
   read: () -> (opt User);
   update: (User) -> (bool);
+  whoami: () -> (principal);
 }

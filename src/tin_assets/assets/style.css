@@ -221,6 +221,7 @@ section.readme .count_slide {
     align-items: center;
     justify-content: center;
     padding-top: 20px;
+    /* position: absolute; */
 }
 
 section.readme .count_slide .dot {
@@ -658,7 +659,9 @@ span.haveAcc a:hover {
 
 
 
-
+.tab.profile {
+    position: relative;
+}
 
 
 .tab.profile .firs_logo {
@@ -968,7 +971,7 @@ span.haveAcc a:hover {
     flex-wrap: wrap;
     margin-top: 0;
     overflow-y: scroll;
-    max-height: 260px;
+    max-height: 250px;
 }
 
 .tab.profile .selectPhotos .selectPhotosWrap {
@@ -1061,4 +1064,78 @@ span.haveAcc a:hover {
 
 .preloader.active {
     display: flex;
+}
+
+.settings_modal {
+    width: 100%;
+    position: absolute;
+    left: 0px;
+    top: 55px;
+    background-color: #000;
+    height: 100%;
+    z-index: 1000;
+    display: none;
+}
+
+.settings_modal.active {
+    display: block;
+}
+
+.settings_modal .settings_item {
+    height: 50px;
+    width: 100%;
+    border-bottom: 2px solid #9657e35d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.settings_modal .settings_item:hover {
+    border-bottom: 2px solid #9657e3;
+}
+
+.settings_modal .settings_item span {
+    color: white;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-family: Acrom;
+}
+
+.principal {
+    display: flex;
+    flex-direction: column;
+}
+
+.principal .principal-wrap {
+    display: flex;
+    align-items: center;
+    margin-top: 4px;
+    margin-bottom: 8px;
+}
+
+.principal img {
+    max-height: 22px;
+    margin-right: 6px;
+}
+
+.principal span {
+    font-family: Acrom;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 16px;
+    line-height: 19px;
+    color: #999999;
+}
+
+.principal p {
+    margin-top: 0;
+    margin-bottom: 6px;
+    font-family: Acrom;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 16px;
+    line-height: 19px;
+    color: white;
 }

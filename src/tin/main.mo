@@ -27,6 +27,10 @@ actor Tingram {
 
     stable var users : Trie.Trie<Principal, User> = Trie.empty();
 
+    public shared(msg) func whoami() : async Principal {
+        msg.caller
+    };
+
     public shared(msg) func create (user: UserUpdate) : async Text {
         let callerId = msg.caller;
 
