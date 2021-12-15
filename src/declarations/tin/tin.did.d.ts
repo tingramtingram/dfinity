@@ -1,4 +1,6 @@
 import type { Principal } from '@dfinity/principal';
+export type ChunkData = string;
+export type ChunkId = bigint;
 export interface User { 'id' : Principal, 'userData' : UserData }
 export interface UserData {
   'dateOfBirth' : [] | [string],
@@ -6,10 +8,15 @@ export interface UserData {
   'profilePhotos' : Array<[] | [string]>,
 }
 export interface UserUpdate { 'userData' : UserData }
+export type videoIds = Array<bigint>;
 export interface _SERVICE {
   'create' : (arg_0: UserUpdate) => Promise<string>,
   'delete' : () => Promise<boolean>,
+  'getChunk' : (arg_0: ChunkId) => Promise<[] | [ChunkData]>,
+  'getVideoIds' : () => Promise<[] | [videoIds]>,
   'read' : () => Promise<[] | [User]>,
+  'setChunk' : (arg_0: ChunkId, arg_1: ChunkData) => Promise<string>,
+  'setVideoIds' : (arg_0: videoIds) => Promise<string>,
   'update' : (arg_0: User) => Promise<boolean>,
   'whoami' : () => Promise<Principal>,
 }

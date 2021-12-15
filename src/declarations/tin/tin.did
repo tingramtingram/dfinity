@@ -1,3 +1,4 @@
+type videoIds = vec nat;
 type UserUpdate = record {userData: UserData;};
 type UserData = 
  record {
@@ -10,10 +11,16 @@ type User =
    id: principal;
    userData: UserData;
  };
+type ChunkId = nat;
+type ChunkData = text;
 service : {
   create: (UserUpdate) -> (text);
   delete: () -> (bool);
+  getChunk: (ChunkId) -> (opt ChunkData);
+  getVideoIds: () -> (opt videoIds);
   read: () -> (opt User);
+  setChunk: (ChunkId, ChunkData) -> (text);
+  setVideoIds: (videoIds) -> (text);
   update: (User) -> (bool);
   whoami: () -> (principal);
 }

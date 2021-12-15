@@ -46,12 +46,14 @@ const init = async () => {
 
     if (await authClient.isAuthenticated()) {
         handleAuthenticated(authClient);
-        preloaderOff();
+        
         tabReadme.forEach((el) => {
             el.remove();
         });
-    } 
-    preloaderOff();
+    } else {
+        preloaderOff();
+    }
+    
     
     variantDfinity.onclick = async () => {
         preloaderOn();
@@ -67,6 +69,7 @@ const init = async () => {
   };
 
   async function handleAuthenticated(authClient) {
+    
     identity = await authClient.getIdentity();
 
     actor = createActor(canisterId, {
@@ -75,13 +78,14 @@ const init = async () => {
         },
       });
 
-      let who = await actor.whoami();
+      who = await actor.whoami();
       console.log(who.toString());
 
+      preloaderOff();
       getProfile(1, who);
     }
 init();
-
+let who;
 
 
 
@@ -116,6 +120,7 @@ gear.addEventListener('click', async function() {
     });
     deleteBtn.addEventListener('click', async function() {
         preloaderOn();
+        messageForHeart('Delete your account');
         let res = await actor.delete();
         preloaderOff();
         location.reload();
@@ -125,10 +130,21 @@ gear.addEventListener('click', async function() {
     // location.reload();
 });
 
+function messageForHeart(message) {
+    let spanHeart = document.querySelector('.preloader span');
+    spanHeart.innerHTML = message;
+};
+
 async function getProfile(rollBacks, principal) {
     preloaderOn();
+    messageForHeart('Get your profile');
     let res = await actor.read();
-    preloaderOff();
+    console.log('полученый профиль:' + res);
+    if (res == null || res == "" || res == undefined) {
+        console.log('Профиль не создан');
+        preloaderOff();
+    }
+    messageForHeart('Get your Principal Id');
     let principalString = principal.toString();
 
     let lastPrincipal = principalString.slice(-3);
@@ -153,19 +169,82 @@ async function getProfile(rollBacks, principal) {
             
         }
         paginationWrapper.remove();
+        messageForHeart('Deploy your data on page');
         console.log(res);
         let name = document.querySelector('.name_age_box .name');
         let dateOfBirth = document.querySelector('.name_age_box .age');
         name.innerHTML = res[0].userData.name;
         dateOfBirth.innerHTML = res[0].userData.dateOfBirth;
-        let profilePhotos = res[0].userData.profilePhotos;
-        let profilePhotosWrap = document.querySelector('.selectPhotosWrap');
-        let mainPhoto = document.querySelector('.left .photo_box img');
-        mainPhoto.src = profilePhotos[0][0];
-        profilePhotos.forEach((el) => {
-            let child = '<div class="child"><img src="'+ el[0] +'" alt=""></div>';
-            profilePhotosWrap.innerHTML += child;
+        if (res[0].userData.profilePhotos !== null) {
+            let profilePhotos = res[0].userData.profilePhotos;
+            let profilePhotosWrap = document.querySelector('.selectPhotosWrap');
+            let mainPhoto = document.querySelector('.left .photo_box img');
+            mainPhoto.src = profilePhotos[0][0];
+            profilePhotos.forEach((el) => {
+                let child = '<div class="child"><img src="'+ el[0] +'" alt=""></div>';
+                profilePhotosWrap.innerHTML += child;
+            });
+        } else {
+            console.log('аккаунт без фотографий');
+        }
+
+        messageForHeart('Get your video ids');
+        let getVideoIds = await actor.getVideoIds();
+        // convert big int to number 
+        let numbersResult = [];
+        for(let i = 0; i < getVideoIds[0].length; i++) {
+            numbersResult.push(Number(getVideoIds[0][i]));
+        };
+        //
+        console.log(numbersResult);
+        localStorage.setItem('profileVideoIds', JSON.stringify(numbersResult));
+        console.log('НОМЕРА НАШИХ ВИДЕО: ' + JSON.parse(localStorage.getItem('profileVideoIds')));
+
+        messageForHeart('Get your quantity videos');
+        // УЗНАЕМ СКОЛЬКО ВИДЕО У НАС ЗАГРУЖЕНО 
+        // let videos = 0;
+        let allVideoNumbers = JSON.parse(localStorage.getItem('profileVideoIds'));
+        // let count = 0;
+        let promisesArray = [];
+
+        for(let i = 0; i < 5; i++) {
+            let chunkNumber = String(allVideoNumbers[i]) + "0"; 
+            promisesArray.push(actor.getChunk(Number(chunkNumber)));
+        };
+        let allVideos = 0;
+        const responses = await Promise.all(promisesArray).then((data) => {
+            console.log('мы получили все обещания');
+            console.log(data);
+            console.log(typeof data);
+            data.forEach((el) => {
+                if (el.length == 1) {
+                    allVideos += 1;
+                }
+            });
+            console.log('Количество наших видео:' + allVideos)
+            let profilePhotosWrap = document.querySelector('.selectPhotosWrap');
+            // отображаем боксы видосов на странице 
+            for(let j = 0; j < allVideos; j++) {
+                let videoItem = `
+                <div class="child video" videoId="${allVideoNumbers[j]}" base64="">
+                    <img src="img/play.jpg" alt="">
+                    <div class="loading">
+                        <div class="loading_line_wrapper">
+                        <div class="loading_line">
+                            <div class="loading_line_inner loading_line_inner--1"></div>
+                            <div class="loading_line_inner loading_line_inner--2"></div>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+                profilePhotosWrap.innerHTML += videoItem;
+            };
+            addEventListenersProfileVideos();
         });
+
+        preloaderOff();
+
 
         ifProfile.forEach((el) => {
             el.remove();
@@ -185,35 +264,242 @@ async function getProfile(rollBacks, principal) {
 };
 
 
+function addEventListenersProfileVideos() {
+    let allVideoItems = document.querySelectorAll('.selectPhotosWrap .child.video');
+    allVideoItems.forEach((el) => {
+        el.addEventListener('click', function() {
+            let videoId = String(this.getAttribute('videoid'));
+            let loadingItem = this.querySelector('.loading');
+            loadingItem.classList.add('active');
+            getFullVideoBase64(videoId, this, loadingItem);
+
+        });
+    });
+};
+
+async function getFullVideoBase64(stringVideoId, videoItem, preloader) {
+
+    // получаем видео 
+    // let chunkId = 0;
+    console.log('начинаем загрузку видео из мотоко');
+    let chunksFront = [];
+    // getCh();
+    
+    for(let i = 0; i < 12; i++) {
+        let resultChunkId = stringVideoId + String(i);
+        // let chunk = await actor.getChunk(Number(resultChunkId));
+        chunksFront.push(actor.getChunk(Number(resultChunkId)));
+    };
+    console.log("MASSIVE С ОБЕЩАНИЯММИ:" + chunksFront);
+
+    const responses = await Promise.all(chunksFront).then((data) => {
+        preloader.classList.remove('active');
+        console.log('мы получили все обещания');
+        console.log(data);
+        console.log(typeof data);
+        let base64code = data.join('');
+        videoItem.setAttribute('base64', base64code);
+        let videoHtmlItem = `
+        <video id="video" width="370" controls>
+            <source src="${base64code}">
+        </video>
+        `;
+        let videoModal = document.querySelector('.videoModal');
+        let videoModalWrap = document.querySelector('.videoModal .videoModalWrap');
+        videoModalWrap.innerHTML = videoHtmlItem;
+        videoModal.classList.add('active');
+    });
+};
+
+// прослушка крестика модалки с видео 
+let videoModalWindow = document.querySelector('.videoModal');
+let closeVideo = document.querySelector('.videoModal > img');
+closeVideo.addEventListener('click', function() {
+    if (videoModalWindow.classList.contains('active')) {
+        videoModalWindow.classList.remove('active');
+    }
+});
+
+let videosBase64Array = [];
+let videoChunks = [];
+let ids = [];
+let nowLoadedVideoNumber = 0;
 
 createUser.addEventListener('click', async function() {
-    preloaderOn();
-    let name = newName.value;
-    let birthDate = newBirthDate.value;
-    let photos = document.querySelectorAll('.selectPhotos .photoBox');
+    let photos = document.querySelectorAll('.selectPhotos .photoBox.img');
     let photosArray = [];
     photos.forEach((el) => {
         photosArray.push([el.querySelector('img').src]);
     });
-    console.log(name);
-    console.log(birthDate);
-    console.log(photosArray);
-
-    let userData = {
-        userData : {
-            dateOfBirth : [birthDate],
-            name : [name],
-            profilePhotos : photosArray
-        }
-    };
-    let res = await actor.create(userData);
-    console.log(res);
+    if (photosArray.length == 0) {
+        alert('Нужно загрузить хотя бы одно фото!');
+    } else {
+        preloaderOn();
+        let name = newName.value;
+        let birthDate = newBirthDate.value;
     
-    let who = await actor.whoami();
-    preloaderOff();
-    getProfile(3, who);
-    runRoll();
+        console.log(name);
+        console.log(birthDate);
+        console.log(photosArray);
+    
+        let userData = {
+            userData : {
+                dateOfBirth : [birthDate],
+                name : [name],
+                profilePhotos : photosArray
+            }
+        };
+        messageForHeart('Create new User');
+        let res = await actor.create(userData);
+        console.log(res);
+
+        // set videoIds
+            // состовляем массив из массивов с чанками всех загруженых видео (после загрузки юзером они хранятся в videoBase64Array)
+        for(let i = 0; i < videosBase64Array.length; i++) {
+            let chunkArray = videosBase64Array[i].match(/.{1,1800000}/g);
+            videoChunks.push(chunkArray);
+        };
+        console.log(videoChunks);
+        
+        
+        
+        
+        
+        for(let i = 0; i < 5; i++) {
+            ids.push(randomInteger(100, 99999));
+        };
+        localStorage.setItem('profileVideoIds', JSON.stringify(ids));
+
+        console.log('front random_ids:' + ids);
+        messageForHeart('Send your video ids to server');
+        let setVideos = await actor.setVideoIds(ids);
+        console.log(setVideos);
+        // let getVideoIds = await actor.getVideoIds();
+        // convert big int to number 
+        // let numbersResult = [];
+        // for(let i = 0; i < getVideoIds[0].length; i++) {
+        //     numbersResult.push(Number(getVideoIds[0][i]));
+        // };
+        //
+        // console.log(numbersResult);
+        ids = [];
+    
+        // LOAD VIDEOS TO MOTOKO
+        // load first video on motoko chunks 
+        
+        if (videoChunks.length !== 0) {
+            messageForHeart('Send your videos to server');
+            loadVideosInMotoko();
+        } else {
+            preloaderOff();
+            getProfile(3, who);
+            runRoll();
+        }
+        
+
+        // for(let i = 0; i < videoChunks.length; i++) {
+        //     let chunkId = 0;      // текущий номер чанка 
+        //     let videoId = JSON.parse(localStorage.getItem('profileVideoIds'))[nowLoadedVideoNumber];    // номер видео в профиле
+        //     let chunksValue = videoChunks[nowLoadedVideoNumber].length;    // общее количество чанков в первом видео
+        //     let resultIds = [];                 // в цикле ниже получаем скреплёные айдишники для хранения чанков (айди видео + номер чанка)
+        //     for(let j = 0; j < chunksValue; j++) {
+        //         let resultId = String(videoId) + String(chunkId);
+        //         chunkId += 1;
+        //         console.log('result chunk id:' + resultId);
+        //         resultIds.push(Number(resultId));
+        //     };
+
+
+
+
+        // };
+
+        async function loadVideosInMotoko() {
+            switch(true) {
+                case nowLoadedVideoNumber == 0 : messageForHeart('Send your first video to server');break;
+                case nowLoadedVideoNumber == 1 : messageForHeart('Send your second video to server');break;
+                case nowLoadedVideoNumber == 2 : messageForHeart('Send your third video to server');break;
+                case nowLoadedVideoNumber == 3 : messageForHeart('Send your four video to server');break;
+                case nowLoadedVideoNumber == 4 : messageForHeart('Send your five video to server');break;
+            }
+            let chunkId = 0;                   
+            let videoId = JSON.parse(localStorage.getItem('profileVideoIds'))[nowLoadedVideoNumber];    // первый номер видео в профиле
+            let chunksValue = videoChunks[nowLoadedVideoNumber].length;    // общее количество чанков в первом видео
+            let resultIds = [];                 // в цикле ниже получаем скреплёные айдишники для хранения чанков (айди видео + номер чанка)
+            for(let i = 0; i < chunksValue; i++) {
+                let resultId = String(videoId) + String(chunkId);
+                chunkId += 1;
+                console.log('result chunk id:' + resultId);
+                resultIds.push(Number(resultId));
+            };
+            console.log('Список готовых номеров для чанков одного видео:' + resultIds);
+            console.log('Количество чанков для одного видео:' + videoChunks[nowLoadedVideoNumber].length);
+            // load chunks on backend
+            console.log('начинаем загрузку чанков');
+            // let chunkNum = 0;
+
+            let promiseArray = [];
+            new Promise(async (resolve, reject) => {
+                for(let i = 0; i < resultIds.length + 1; i++) {
+
+                    if (resultIds[i] !== null && resultIds[i] !== undefined) {
+                        promiseArray.push(actor.setChunk(resultIds[i], videoChunks[nowLoadedVideoNumber][i]));
+                        // let loadChunk = await actor.setChunk(resultIds[i], videoChunks[nowLoadedVideoNumber][i]);
+                        // console.log(loadChunk);
+                    } else {
+                        console.log('Все чанки видео номер:' + nowLoadedVideoNumber + 'загружены в обещание');
+                        nowLoadedVideoNumber += 1;
+                        const responses = await Promise.all(promiseArray).then((data) => {
+                            console.log('мы получили все обещания, видео номер ' + nowLoadedVideoNumber + 'загружено');
+                            console.log(data);
+                            console.log(typeof data);
+                            resolve();
+
+                        });
+                        
+                        
+                    }
+                };
+            }).then(() => {
+                console.log('зашли в зен');
+                console.log('НОМЕР СЛЕДУЮЩЕГО ЗАГРУЖАЕМОГО ВИДЕО:' + nowLoadedVideoNumber);
+                console.log('СКОЛЬКО ВСЕГО ВИДОСОВ НУЖНО ЗАГРУЗИТЬ:' + videoChunks.length);
+                if (nowLoadedVideoNumber < videoChunks.length) {
+                    console.log('идем на круг');
+                    loadVideosInMotoko();
+
+                } else {
+                    console.log('перешли на конец');
+                    nowLoadedVideoNumber = 0;
+                    preloaderOff();
+                    getProfile(3, who);
+                    runRoll();
+                }
+            });
+        };
+
+        
+
+
+    
+
+        
+
+    }
+
+
+
 });
+
+
+
+
+
+function randomInteger(min, max) {
+    // получить случайное число от (min-0.5) до (max+0.5)
+    let rand = min - 0.5 + Math.random() * (max - min + 1);
+    return Math.round(rand);
+}
 
 logOut.addEventListener('click', async function() {
     if (await authClient.isAuthenticated()) {
@@ -223,12 +509,12 @@ logOut.addEventListener('click', async function() {
 
 setTimeout(() => {
     fadeOut(hi, 10)
-}, 2000);
+}, 800);
 // }, 1);
 
 setTimeout(() => {
     runRoll();
-}, 3000);
+}, 1000);
 // }, 1);
 
 function fadeOut(element, time) {
@@ -313,7 +599,10 @@ uploadImputs.forEach((el) => {
     });        
 });   
 
+
+
 let imgId = 1;
+let proverkaVesa = [];
 function onFileSelected(event) {
 
     let selectedFile = event.target.files[0];
@@ -323,48 +612,73 @@ function onFileSelected(event) {
     reader.readAsDataURL(selectedFile);
 
     reader.onload = function(event) {
+        let boxWrapper = document.querySelector('.selectPhotos');
+            if (event.target.result.startsWith('data:video')) {
+                console.log('Это видео')
+                console.log(event);
+                let base64video = event.target.result;
 
-            let boxWrapper = document.querySelector('.selectPhotos');
-            let newBox = `
-            <div class="photoBox">
-                <img class="user" src="${event.target.result}" imgId="${imgId}" alt="">
-            </div>
-            `;
-            boxWrapper.innerHTML += newBox;
-            preloaderOn();
+                let chunkArray = base64video.match(/.{1,1800000}/g);
+                proverkaVesa.push(chunkArray);
+                // if (proverkaVesa[0].length > 12) {
+                //     alert('The downloadable video exceeds 21 megabytes');
+                // } else {
+                    videosBase64Array.push(base64video);
+
+                    let newBox = `
+                    <div class="photoBox video">
+                        <img class="" src="img/play.jpg" alt="">
+                    </div>
+                    `;
+                    boxWrapper.innerHTML += newBox;
+                // }
+
+            } else {
+                
+                let newBox = `
+                <div class="photoBox img">
+                    <img class="user" src="${event.target.result}" imgId="${imgId}" alt="">
+                </div>
+                `;
+                boxWrapper.innerHTML += newBox;
+                preloaderOn();
+                
+                
+                setTimeout(() => {
+                    let img = document.querySelector('img.user[imgId="' + imgId + '"]');
+                    
+                    const canvas = document.createElement('canvas');
+                    const width = 375;
+                    const scaleFactor = width / img.width;
             
             
-            setTimeout(() => {
-                let img = document.querySelector('img.user[imgId="' + imgId + '"]');
-                
-                const canvas = document.createElement('canvas');
-                const width = 375;
-                const scaleFactor = width / img.width;
+                    canvas.width = width;
+                    canvas.height = img.height * scaleFactor;
+                    // canvas.height = 320;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, img.height * scaleFactor);
+                    // img.src="";
+                    ctx.canvas.toBlob((blob) => {
+                        img.src="";
+            
+                        let rea = new FileReader();
+                        rea.readAsDataURL(blob);
+            
+                        rea.onloadend = function() {
+                            let basee = rea.result;
+                            img.src = basee;
+                            preloaderOff();
+                            imgId += 1;
+                            console.log(basee)
+                        }
+            
+                    }, 'image/jpeg', 0.5);
+                    
+                }, 800);
+            }
+
+
         
-        
-                canvas.width = width;
-                canvas.height = img.height * scaleFactor;
-                // canvas.height = 320;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, img.height * scaleFactor);
-                // img.src="";
-                ctx.canvas.toBlob((blob) => {
-                    img.src="";
-        
-                    let rea = new FileReader();
-                    rea.readAsDataURL(blob);
-        
-                    rea.onloadend = function() {
-                        let basee = rea.result;
-                        img.src = basee;
-                        preloaderOff();
-                        imgId += 1;
-                        console.log(basee)
-                    }
-        
-                }, 'image/jpeg', 0.5);
-                
-            }, 800);
 
     };
 }
