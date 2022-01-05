@@ -139,18 +139,19 @@ async function getProfile(rollBacks, principal) {
     preloaderOn();
     messageForHeart('Get your profile');
     let res = await actor.read();
-    console.log('полученый профиль:' + res);
+    console.log('полученый профиль:');
+    console.log(res)
     if (res == null || res == "" || res == undefined) {
         console.log('Профиль не создан');
         preloaderOff();
     }
+
+
+    // RENDER PRINCIPAL 
     messageForHeart('Get your Principal Id');
     let principalString = principal.toString();
-
     let lastPrincipal = principalString.slice(-3);
     let firstPrincipal = principalString.substring(0, 5);
-    console.log('firstPincipal:' + firstPrincipal);
-    console.log('lastPrincipal laset:' + lastPrincipal);
     let miniPrincipal = firstPrincipal + "..." + lastPrincipal;
 
     if (res.length > 0) {
@@ -158,8 +159,6 @@ async function getProfile(rollBacks, principal) {
         if (principal !== null) {
             principalP.setAttribute('full', principalString);
             principalP.innerHTML = miniPrincipal;
-
-
             let principalItem = document.querySelector('.principal');
             principalItem.addEventListener('click', function() {
                 let full = principalP.getAttribute('full');
@@ -168,32 +167,33 @@ async function getProfile(rollBacks, principal) {
             });
             
         }
+        // END RENDER PRINCIPAL
+
         paginationWrapper.remove();
         messageForHeart('Deploy your data on page');
-        console.log(res);
+        // RENDER NAME, BIRTH and PHOTOS 
         let name = document.querySelector('.name_age_box .name');
         let dateOfBirth = document.querySelector('.name_age_box .age');
         name.innerHTML = res[0].userData.name;
         dateOfBirth.innerHTML = res[0].userData.dateOfBirth;
-        if (res[0].userData.profilePhotos !== null) {
-            let profilePhotos = res[0].userData.profilePhotos;
-            let profilePhotosWrap = document.querySelector('.selectPhotosWrap');
-            let mainPhoto = document.querySelector('.left .photo_box img');
-            mainPhoto.src = profilePhotos[0][0];
-            profilePhotos.forEach((el) => {
-                let child = '<div class="child"><img src="'+ el[0] +'" alt=""></div>';
-                profilePhotosWrap.innerHTML += child;
-            });
-        } else {
-            console.log('аккаунт без фотографий');
-        }
+        
+        let profilePhotos = res[0].userData.profilePhotos;
+        let profilePhotosWrap = document.querySelector('.selectPhotosWrap');
+        let mainPhoto = document.querySelector('.left .photo_box img');
+        mainPhoto.src = profilePhotos[0][0];
+        profilePhotos.forEach((el) => {
+            let child = '<div class="child"><img src="'+ el[0] +'" alt=""></div>';
+            profilePhotosWrap.innerHTML += child;
+        });
 
+        // END RENDER NAME, BIRTH and PHOTOS 
         messageForHeart('Get your video ids');
-        let getVideoIds = await actor.getVideoIds();
+
+        let getVideoIds = res[0].userData.profileVideoIds;
         // convert big int to number 
         let numbersResult = [];
-        for(let i = 0; i < getVideoIds[0].length; i++) {
-            numbersResult.push(Number(getVideoIds[0][i]));
+        for(let i = 0; i < getVideoIds.length; i++) {
+            numbersResult.push(Number(getVideoIds[i]));
         };
         //
         console.log(numbersResult);
@@ -202,46 +202,27 @@ async function getProfile(rollBacks, principal) {
 
         messageForHeart('Get your quantity videos');
         // УЗНАЕМ СКОЛЬКО ВИДЕО У НАС ЗАГРУЖЕНО 
-        // let videos = 0;
-        let allVideoNumbers = JSON.parse(localStorage.getItem('profileVideoIds'));
-        // let count = 0;
-        let promisesArray = [];
 
-        for(let i = 0; i < 5; i++) {
-            let chunkNumber = String(allVideoNumbers[i]) + "0"; 
-            promisesArray.push(actor.getChunk(Number(chunkNumber)));
-        };
-        let allVideos = 0;
-        const responses = await Promise.all(promisesArray).then((data) => {
-            console.log('мы получили все обещания');
-            console.log(data);
-            console.log(typeof data);
-            data.forEach((el) => {
-                if (el.length == 1) {
-                    allVideos += 1;
-                }
-            });
-            console.log('Количество наших видео:' + allVideos)
-            let profilePhotosWrap = document.querySelector('.selectPhotosWrap');
-            // отображаем боксы видосов на странице 
-            for(let j = 0; j < allVideos; j++) {
-                let videoItem = `
-                <div class="child video" videoId="${allVideoNumbers[j]}" base64="">
-                    <img src="img/play.jpg" alt="">
-                    <div class="loading">
-                        <div class="loading_line_wrapper">
-                        <div class="loading_line">
-                            <div class="loading_line_inner loading_line_inner--1"></div>
-                            <div class="loading_line_inner loading_line_inner--2"></div>
-                        </div>
-                        </div>
+        console.log('Количество наших видео:' + getVideoIds.length)
+        // отображаем боксы видосов на странице 
+        for(let j = 0; j < getVideoIds.length; j++) {
+            let videoItem = `
+            <div class="child video" videoId="${getVideoIds[j]}" base64="">
+                <img src="img/play.jpg" alt="">
+                <div class="loading">
+                    <div class="loading_line_wrapper">
+                    <div class="loading_line">
+                        <div class="loading_line_inner loading_line_inner--1"></div>
+                        <div class="loading_line_inner loading_line_inner--2"></div>
+                    </div>
                     </div>
                 </div>
-                `;
-                profilePhotosWrap.innerHTML += videoItem;
-            };
-            addEventListenersProfileVideos();
-        });
+            </div>
+            `;
+            profilePhotosWrap.innerHTML += videoItem;
+        };
+        addEventListenersProfileVideos();
+        
 
         preloaderOff();
 
@@ -268,10 +249,23 @@ function addEventListenersProfileVideos() {
     let allVideoItems = document.querySelectorAll('.selectPhotosWrap .child.video');
     allVideoItems.forEach((el) => {
         el.addEventListener('click', function() {
-            let videoId = String(this.getAttribute('videoid'));
-            let loadingItem = this.querySelector('.loading');
-            loadingItem.classList.add('active');
-            getFullVideoBase64(videoId, this, loadingItem);
+            if (this.getAttribute('base64') == "") {
+                let videoId = String(this.getAttribute('videoid'));
+                let loadingItem = this.querySelector('.loading');
+                loadingItem.classList.add('active');
+                getFullVideoBase64(videoId, this, loadingItem);
+            } else {
+                let base64code = this.getAttribute('base64');
+                let videoHtmlItem = `
+                <video id="video" width="370" controls>
+                    <source src="${base64code}">
+                </video>
+                `;
+                let videoModal = document.querySelector('.videoModal');
+                let videoModalWrap = document.querySelector('.videoModal .videoModalWrap');
+                videoModalWrap.innerHTML = videoHtmlItem;
+                videoModal.classList.add('active');
+            }
 
         });
     });
@@ -285,7 +279,7 @@ async function getFullVideoBase64(stringVideoId, videoItem, preloader) {
     let chunksFront = [];
     // getCh();
     
-    for(let i = 0; i < 12; i++) {
+    for(let i = 0; i < 14; i++) {
         let resultChunkId = stringVideoId + String(i);
         // let chunk = await actor.getChunk(Number(resultChunkId));
         chunksFront.push(actor.getChunk(Number(resultChunkId)));
@@ -315,6 +309,8 @@ async function getFullVideoBase64(stringVideoId, videoItem, preloader) {
 let videoModalWindow = document.querySelector('.videoModal');
 let closeVideo = document.querySelector('.videoModal > img');
 closeVideo.addEventListener('click', function() {
+    let videoTag = document.querySelector('.videoModalWrap video');
+    videoTag.remove();
     if (videoModalWindow.classList.contains('active')) {
         videoModalWindow.classList.remove('active');
     }
@@ -322,9 +318,10 @@ closeVideo.addEventListener('click', function() {
 
 let videosBase64Array = [];
 let videoChunks = [];
-let ids = [];
 let nowLoadedVideoNumber = 0;
 
+
+let videoIds = [];
 createUser.addEventListener('click', async function() {
     let photos = document.querySelectorAll('.selectPhotos .photoBox.img');
     let photosArray = [];
@@ -337,21 +334,28 @@ createUser.addEventListener('click', async function() {
         preloaderOn();
         let name = newName.value;
         let birthDate = newBirthDate.value;
-    
-        console.log(name);
-        console.log(birthDate);
-        console.log(photosArray);
+        
+        // узнаем сколько мы хотим загрузить видео, и создаем сколько нужно айдишников для видосов
+        for(let i = 0; i < videosBase64Array.length; i++) {
+            let randomId = randomInteger(100, 99999);
+            videoIds.push(randomId);
+        };
+        localStorage.setItem('profileVideoIds', JSON.stringify(videoIds));
+        
+        console.log('VideoIds которые запушим в мотоко');
+        console.log(videoIds)
     
         let userData = {
             userData : {
                 dateOfBirth : [birthDate],
                 name : [name],
-                profilePhotos : photosArray
+                profilePhotos : photosArray,
+                profileVideoIds : videoIds
             }
         };
         messageForHeart('Create new User');
-        let res = await actor.create(userData);
-        console.log(res);
+
+
 
         // set videoIds
             // состовляем массив из массивов с чанками всех загруженых видео (после загрузки юзером они хранятся в videoBase64Array)
@@ -360,33 +364,13 @@ createUser.addEventListener('click', async function() {
             videoChunks.push(chunkArray);
         };
         console.log(videoChunks);
-        
-        
-        
-        
-        
-        for(let i = 0; i < 5; i++) {
-            ids.push(randomInteger(100, 99999));
-        };
-        localStorage.setItem('profileVideoIds', JSON.stringify(ids));
 
-        console.log('front random_ids:' + ids);
-        messageForHeart('Send your video ids to server');
-        let setVideos = await actor.setVideoIds(ids);
-        console.log(setVideos);
-        // let getVideoIds = await actor.getVideoIds();
-        // convert big int to number 
-        // let numbersResult = [];
-        // for(let i = 0; i < getVideoIds[0].length; i++) {
-        //     numbersResult.push(Number(getVideoIds[0][i]));
-        // };
-        //
-        // console.log(numbersResult);
-        ids = [];
-    
+
+        await actor.create(userData);
+        
+        
         // LOAD VIDEOS TO MOTOKO
         // load first video on motoko chunks 
-        
         if (videoChunks.length !== 0) {
             messageForHeart('Send your videos to server');
             loadVideosInMotoko();
@@ -396,24 +380,6 @@ createUser.addEventListener('click', async function() {
             runRoll();
         }
         
-
-        // for(let i = 0; i < videoChunks.length; i++) {
-        //     let chunkId = 0;      // текущий номер чанка 
-        //     let videoId = JSON.parse(localStorage.getItem('profileVideoIds'))[nowLoadedVideoNumber];    // номер видео в профиле
-        //     let chunksValue = videoChunks[nowLoadedVideoNumber].length;    // общее количество чанков в первом видео
-        //     let resultIds = [];                 // в цикле ниже получаем скреплёные айдишники для хранения чанков (айди видео + номер чанка)
-        //     for(let j = 0; j < chunksValue; j++) {
-        //         let resultId = String(videoId) + String(chunkId);
-        //         chunkId += 1;
-        //         console.log('result chunk id:' + resultId);
-        //         resultIds.push(Number(resultId));
-        //     };
-
-
-
-
-        // };
-
         async function loadVideosInMotoko() {
             switch(true) {
                 case nowLoadedVideoNumber == 0 : messageForHeart('Send your first video to server');break;
@@ -478,16 +444,7 @@ createUser.addEventListener('click', async function() {
             });
         };
 
-        
-
-
-    
-
-        
-
     }
-
-
 
 });
 
@@ -642,6 +599,7 @@ function onFileSelected(event) {
                 `;
                 boxWrapper.innerHTML += newBox;
                 preloaderOn();
+                messageForHeart('Load photo');
                 
                 
                 setTimeout(() => {

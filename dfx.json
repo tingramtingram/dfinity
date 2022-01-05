@@ -1,19 +1,19 @@
 {
   "canisters": {
-    "tingram": {
-      "main": "src/tingram/main.mo",
+    "tin": {
+      "main": "src/tin/main.mo",
       "type": "motoko"
     },
-    "tingram_assets": {
+    "tin_assets": {
       "dependencies": [
-        "tingram"
+        "tin"
       ],
       "frontend": {
-        "entrypoint": "src/tingram_assets/src/index.html"
+        "entrypoint": "src/tin_assets/src/index.html"
       },
       "source": [
-        "src/tingram_assets/assets",
-        "dist/tingram_assets/"
+        "src/tin_assets/assets",
+        "dist/tin_assets/"
       ],
       "type": "assets"
     }
@@ -24,7 +24,7 @@
       "packtool": ""
     }
   },
-  "dfx": "0.8.3",
+  "dfx": "0.8.4",
   "networks": {
     "local": {
       "bind": "127.0.0.1:8000",

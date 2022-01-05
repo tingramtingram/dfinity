@@ -10,6 +10,7 @@ actor Tingram {
         name : ?Text;
         dateOfBirth : ?Text;
         profilePhotos : [?Text];
+        profileVideoIds : [Nat];
     };
 
     type User = {
@@ -26,7 +27,7 @@ actor Tingram {
         #AlreadyExists;
     };
 
-    type videoIds = [Nat];
+   
 
     type VideoId = Nat;
     type ChunkId = Nat;
@@ -34,25 +35,13 @@ actor Tingram {
     type ChunkData = Text;
 
     stable var users : Trie.Trie<Principal, User> = Trie.empty();
-    stable var videoids : Trie.Trie<Principal, videoIds> = Trie.empty();
+    
     stable var chunks : Trie.Trie<VideoId, ChunkData> = Trie.empty();
 
     public shared(msg) func whoami() : async Principal {
         msg.caller
     };
 
-    public shared(msg) func setVideoIds(idsArray : videoIds) : async Text {
-        let userPrincipal = msg.caller;
-        let (newVideoIds, existing) = Trie.put(videoids, key(userPrincipal), Principal.equal, idsArray);
-        videoids := newVideoIds;
-        return "video id's saved";
-    };
-
-    public shared(msg) func getVideoIds() : async ?videoIds {
-        let userPrincipal = msg.caller;
-        let idsResult = Trie.find(videoids, key(userPrincipal), Principal.equal);
-        return idsResult;
-    };
 
     public shared(msg) func setChunk(chunkNumber : ChunkId, chunkData : ChunkData) : async Text {
         let chunk = chunkNumber;
