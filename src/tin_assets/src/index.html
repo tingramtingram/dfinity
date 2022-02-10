@@ -34,9 +34,10 @@
         </div>
 
         <div class="tabs_wrap">
-            <div class="preloader">
-                <div class="lds-heart"><div></div></div>
-                <span style="color: white;"></span>
+            <div class="loader">
+                <!-- <div class="lds-heart"><div></div></div> -->
+                <span style="color: white;"></span> 
+                <img src="img/loader-pic.svg" alt="">
             </div>
             
             <div class="roll">
@@ -66,9 +67,9 @@
                         <img src="img/readme_3.png" alt="">
                     </div>
                     <p class="title">Tingram</p>
-                    <span class="descr">Find your happiness.</span>
+                    <span class="descr">Find your <br> happiness.</span>
                     <button class="tabs tabBtn">Let's get Started</button>
-                    <span class="noAcc">Already have an <a href="#">account</a> ?</span>
+                    <!-- <span class="noAcc">Already have an <a href="#">account</a> ?</span> -->
                 </div>
 
                 <div class="tab login">
@@ -77,7 +78,7 @@
                         <span>TinGram</span>
                     </div>
                     <p class="title">Log <span class="mod">In</span></p>
-                    <div class="global_input">
+                    <!-- <div class="global_input">
                         <span>Email address</span>
                         <input class="login_email" type="text" placeholder="Enter E-mail">
                         <img src="img/line.png" alt="">
@@ -87,15 +88,15 @@
                         <img class="modify" src="img/visibility.svg" alt="">
                         <input class="login_password" type="password" placeholder="Enter password">
                         <img src="img/line.png" alt="">
-                    </div>
-                    <button class="login">
+                    </div> -->
+                    <!-- <button class="login">
                         <img src="img/login_arrow.svg" alt="">
-                    </button>
+                    </button> -->
                     <div class="login_variants">
                         <div class="variant dfinity">
-                            <img src="img/dfinity_circle.png" alt="">
+                            <img src="img/dfinitypng.png" alt="">
                         </div>
-                        <div class="variant">
+                        <!-- <div class="variant">
                             <img src="img/instagram_circle.png" alt="">
                         </div>
                         <div class="variant">
@@ -103,10 +104,10 @@
                         </div>
                         <div class="variant">
                             <img src="img/google_circle.png" alt="">
-                        </div>
+                        </div> -->
                     </div>
-                    <span class="forgot">Forgot your <a href="#">password</a>?</span>
-                    <span class="newAccount">Don't you have an <a href="#">account</a>?</span>
+                    <!-- <span class="forgot">Forgot your <a href="#">password</a>?</span>
+                    <span class="newAccount">Don't you have an <a href="#">account</a>?</span> -->
                 </div>
 
                 <div class="tab ifProfile">
@@ -119,18 +120,104 @@
                         <input class="newName" type="text" placeholder="Enter your name">
                         <img src="img/line.png" alt="">
                     </div>
+                    
+                    <div class="global_input">
+                        <span>Сhoose your gender</span>
+                      
+                            <div class="chosen-value selectItem" style="padding: 0 10px;">
+                                <span>Your gender</span>
+                            </div>
+                            <ul class="value-list" >
+                              <li>Male</li>
+                              <li>Female</li>
+                              <li>Other</li>
+                            </ul>
+                     
+                        <img src="img/line.png" alt="">
+                    </div>
+
                     <div class="global_input">
                         <span>When were you born?</span>
-                        <input class="newDate" type="date" value="2021-01-01">
+                        <input class="newDate" type="date" >
+                        <img src="img/line.png" alt="">
+                    </div>
+                    <div class="global_input">
+                        <span>Few words about yourself</span>
+                        <input class="about" type="text" placeholder="About">
                         <img src="img/line.png" alt="">
                     </div>
                     <div class="global_continue">
                         <button class="continue checkNameDate">Continue</button>
-                        <span class="haveAcc">Already have an <a href="#"> account</a>?</span>
+                        <!-- <span class="haveAcc">Already have an <a href="#"> account</a>?</span> -->
                     </div>
                     
                     
                 </div>
+
+                <div class="tab ifProfile">
+                    <div class="firs_logo">
+                        <img class="backButton" src="img/back.svg" alt="">
+                        <span>Tell us about your <br> interests</span>
+                    </div>
+
+
+                    <div class="loginInterestsWrap">
+                        <div class="loginInterests">
+
+                                    
+                            <!-- <div class="about">
+                                <span>About</span>
+                                <p>Lorem, ipsum dolor sit aluptatem?</p>
+                            </div> -->
+
+                            <div class="interest main">
+                                <span>The main things</span>
+                                <div class="tagArea">
+                                    <span class="tag mainThings" bg="#7947B7" tab="1">Relationship</span>
+                                    <span class="tag mainThings" bg="#5F8412" tab="2">Work</span>
+                                    <span class="tag mainThings" bg="#B37619" tab="3">Sport</span>
+                                </div>
+                            </div>
+
+                            <div class="interest tab" tab="1">
+                                <span>Relationship</span>
+                                <div class="tagArea">
+                                    <span class="tag zone" bg="#7947B7" zone="1">Free</span>
+                                    <span class="tag zone" bg="#7947B7" zone="1">Search for a partner</span>
+                                    <span class="tag zone" bg="#7947B7" zone="1">Relationship without obligation</span>
+                                    
+                                </div>
+                            </div>
+
+                            <div class="interest tab" tab="2">
+                                <span>Work</span>
+                                <div class="tagArea">
+                                    <span class="tag zone" bg="#5F8412" zone="2">Engineer</span>
+                                    <span class="tag zone" bg="#5F8412" zone="2">IT specialist</span>
+                                    <span class="tag zone" bg="#5F8412" zone="2">Сrypto enthusiast</span>
+                                </div>
+                            </div>
+
+                            <div class="interest tab" tab="3">
+                                <span>Sport</span>
+                                <div class="tagArea">
+                                    <span class="tag zone" bg="#B37619" zone="3">Tennis</span>
+                                    <span class="tag zone" bg="#B37619" zone="3">Football</span>
+                                    <span class="tag zone" bg="#B37619" zone="3">Snowboard</span>
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+
+
+                    <div class="global_continue" style="margin-top: 0px;">
+                        <button class="continue interestLoginBlock">Continue</button>
+                        <!-- <span class="haveAcc">Already have an <a href="#"> account</a>?</span> -->
+                    </div>
+                </div>
+
 
                 <div class="tab ifProfile">
                     <div class="firs_logo">
@@ -143,7 +230,7 @@
                     </div>
                     <div class="global_continue">
                         <button class="continue uploadPhoto">Continue</button>
-                        <span class="haveAcc">Already have an <a href="#"> account</a>?</span>
+                        <!-- <span class="haveAcc">Already have an <a href="#"> account</a>?</span> -->
                     </div>
                 </div>
 
@@ -153,7 +240,7 @@
                         <span>Uploading a photo</span>
                         <p class="please">Please upload your real photo</p>
                     </div>
-                    <div class="uploadTabs">
+                    <!-- <div class="uploadTabs">
                         <div class="uploadTab active" tab="1">
                             <img src="img/upload1.svg" alt="">
                             <span>Gallery</span>
@@ -166,7 +253,7 @@
                             <img src="img/upload3.svg" alt="">
                             <span>Facebook</span>
                         </div>
-                    </div>
+                    </div> -->
 
                     <div class="photo_matrix">
                         <div class="photoBox default">
@@ -295,30 +382,537 @@
                         </div>
                     </div>
                     <div class="mainPanel">
-                        <div class="mainPanelItem map">
-                            <img src="img/iconPlaceholder.svg" alt="">
+                        <div class="mainPanelItem map main">
+                            <img src="img/lupa.svg" style="width: 26px;" alt="">
                         </div>
-                        <div class="mainPanelItem chat">
+                        <div class="mainPanelItem chat main">
                             <img src="img/iconChat.svg" alt="">
                         </div>
-                        <div class="mainPanelItem poker">
+                        <!-- <div class="mainPanelItem poker main">
                             <img src="img/iconPoker.svg" alt="">
                         </div>
-                        <div class="mainPanelItem media">
+                        <div class="mainPanelItem media main">
                             <img src="img/iconSocialMedia.svg" alt="">
-                        </div>
-                        <div class="mainPanelItem profile">
+                        </div> -->
+                        <div class="mainPanelItem active profile main">
                             <img src="img/iconUser.svg" alt="">
                         </div>
                           
                     </div>
                 </div>
 
+
+                <div class="tab allUsers">
+
+                    <div class="settings_modal">
+
+                        <div class="settings_item logout selectItem">
+                            <p>I'm looking for</p>
+                            <span>All</span> 
+                            <img src="img/back.svg" alt="">
+
+                        </div>
+                        <ul class="value-list gender" style="top: -50px;">
+                            <li data="All">All</li>
+                            <li data="Female">Girls</li>
+                            <li data="Male">Men</li>
+                            <li data="Other">Other</li>
+                        </ul>
+                        <div class="settings_item delete selectItem">
+                            <p>Age</p>
+                            <span>All</span>
+                            <img src="img/back.svg" alt="">
+                        </div>
+                        <ul class="value-list years" style="top: 0px;">
+                            <li data="1-10000">All</li>
+                            <li data="18-25">18-25</li>
+                            <li data="25-30">25-30</li>
+                            <li data="30-35">30-35</li>
+                            <li data="35-40">35-40</li>
+                            <li data="40-50">40-50</li>
+                            <li data="50-10000">50-and more</li>
+                        </ul>
+
+                    </div>
+
+                    <div class="videoModal" >
+                        <img src="img/close.svg" alt="">
+                        <div class="videoModalWrap">
+                            <video id="video" width="370" controls>
+                                <source src="">
+                            </video>
+                        </div>
+                    </div>
+
+                    <div class="settings_modal">
+                        <div class="settings_item logout">
+                            <span>Logout</span>
+                        </div>
+                        <div class="settings_item delete">
+                            <span>Delete account</span>
+                        </div>
+                    </div>
+                    <div class="firs_logo">
+                        <div class="crown">
+                            <img src="img/crown.svg" alt="">
+                        </div>
+
+                        <img src="img/heart.svg" alt="heart">
+                        <span>TinGram</span>
+
+                        <div class="gear">
+                            <img src="img/filters.png" alt="">
+                        </div>
+                    </div>
+
+                    <div class="allUsersWrap">
+                        <div class="allUsers">
+
+                            <!-- <div class="user">
+                                <div class="userPhoto">
+                                    <img src="img/girl1.png" alt="">
+                                </div>
+                                <div class="userInfo">
+                                    <p>Jena Jonson</p>
+                                    <span>20</span>
+                                </div>
+                            </div>
+
+                            <div class="user">
+                                <div class="userPhoto">
+                                    <img src="img/girl1.png" alt="">
+                                </div>
+                                <div class="userInfo">
+                                    <p>Jena Jonson</p>
+                                    <span>20</span>
+                                </div>
+                            </div>
+
+                            <div class="user">
+                                <div class="userPhoto">
+                                    <img src="img/girl1.png" alt="">
+                                </div>
+                                <div class="userInfo">
+                                    <p>Jena Jonson</p>
+                                    <span>20</span>
+                                </div>
+                            </div>
+
+                            <div class="user">
+                                <div class="userPhoto">
+                                    <img src="img/girl1.png" alt="">
+                                </div>
+                                <div class="userInfo">
+                                    <p>Jena Jonson</p>
+                                    <span>20</span>
+                                </div>
+                            </div> -->
+
+                        </div>
+                    </div>
+
+
+                    <div class="mainPanel">
+                        <div class="mainPanelItem active map users">
+                            <img src="img/lupa.svg" style="width: 26px;" alt="">
+                        </div>
+                        <div class="mainPanelItem chat users">
+                            <img src="img/iconChat.svg" alt="">
+                        </div>
+                        <!-- <div class="mainPanelItem poker users">
+                            <img src="img/iconPoker.svg" alt="">
+                        </div>
+                        <div class="mainPanelItem media users">
+                            <img src="img/iconSocialMedia.svg" alt="">
+                        </div> -->
+                        <div class="mainPanelItem profile users">
+                            <img src="img/iconUser.svg" alt="">
+                        </div>
+                          
+                    </div>
+                </div>
+
+
+                <div class="tab chatHistory">
+
+
+                    <div class="videoModal" >
+                        <img src="img/close.svg" alt="">
+                        <div class="videoModalWrap">
+                            <video id="video" width="370" controls>
+                                <source src="">
+                            </video>
+                        </div>
+                    </div>
+
+                    <div class="settings_modal">
+                        <div class="settings_item logout">
+                            <span>Logout</span>
+                        </div>
+                        <div class="settings_item delete">
+                            <span>Delete account</span>
+                        </div>
+                    </div>
+                    <div class="firs_logo">
+                        <div class="crown">
+                            <img src="img/crown.svg" alt="">
+                        </div>
+
+                        <img src="img/heart.svg" alt="heart">
+                        <span>TinGram</span>
+
+                        <!-- <div class="gear">
+                            <img src="img/filters.png" alt="">
+                        </div> -->
+                    </div>
+
+                   <div class="createChat">
+                        <div class="logo">
+                            <img src="img/createChat.png" alt="">
+                        </div>
+                        <span>Create conversation</span>
+                        <div class="arrow">
+                            <img src="img/createChatArrow.svg" alt="">
+                        </div>
+                   </div>
+
+
+                   <div class="chatHistoryWrap">
+                        <div class="chatHistory">
+
+                            <!-- <div class="historyUser">
+                                <div class="photo">
+                                    <img src="img/girl1.png" alt="">
+                                </div>
+                                <div class="info">
+                                    <p>Jana Jonson</p>
+                                    <span>I am waiting you at a cafe</span>
+                                </div>
+                                <span class="time">22:14</span>
+                            </div>
+
+                            <div class="historyUser">
+                                <div class="photo">
+                                    <img src="img/girl1.png" alt="">
+                                </div>
+                                <div class="info">
+                                    <p>Jana Jonson</p>
+                                    <span>I am waiting you at a cafe</span>
+                                </div>
+                                <span class="time">22:14</span>
+                            </div>
+
+                            <div class="historyUser">
+                                <div class="photo">
+                                    <img src="img/girl1.png" alt="">
+                                </div>
+                                <div class="info">
+                                    <p>Jana Jonson</p>
+                                    <span>I am waiting you at a cafe</span>
+                                </div>
+                                <span class="time">22:14</span>
+                            </div>
+
+                            <div class="historyUser">
+                                <div class="photo">
+                                    <img src="img/girl1.png" alt="">
+                                </div>
+                                <div class="info">
+                                    <p>Jana Jonson</p>
+                                    <span>I am waiting you at a cafe</span>
+                                </div>
+                                <span class="time">22:14</span>
+                            </div> -->
+                            
+
+                        </div>
+                   </div>
+
+
+                    <div class="mainPanel">
+                        <div class="mainPanelItem map conversations">
+                            <img src="img/lupa.svg" style="width: 26px;" alt="">
+                        </div>
+                        <div class="mainPanelItem active chat conversations">
+                            <img src="img/iconChat.svg" alt="">
+                        </div>
+                        <!-- <div class="mainPanelItem poker conversations">
+                            <img src="img/iconPoker.svg" alt="">
+                        </div>
+                        <div class="mainPanelItem media conversations">
+                            <img src="img/iconSocialMedia.svg" alt="">
+                        </div> -->
+                        <div class="mainPanelItem profile conversations">
+                            <img src="img/iconUser.svg" alt="">
+                        </div>
+                          
+                    </div>
+                </div>
+
+
+
+
+                <div class="tab chat">
+
+
+                    <div class="videoModal" >
+                        <img src="img/close.svg" alt="">
+                        <div class="videoModalWrap">
+                            <video id="video" width="370" controls>
+                                <source src="">
+                            </video>
+                        </div>
+                    </div>
+
+                    <div class="settings_modal">
+                        <div class="settings_item logout">
+                            <span>Logout</span>
+                        </div>
+                        <div class="settings_item delete">
+                            <span>Delete account</span>
+                        </div>
+                    </div>
+
+
+                    <div class="firs_logo">
+                        <div class="crown">
+                            <img src="img/back.svg" alt="">
+                        </div>
+
+                        <div class="opponent">
+                            <div class="photo">
+                                <img src="img/girl1.png" alt="">
+                            </div>
+                            <div class="info">
+                                <p>Jena Jonson</p>
+                                <!-- <span>Offline</span> -->
+                            </div>
+                        </div>
+
+                        <!-- <div class="gear">
+                            <img src="img/filters.png" alt="">
+                        </div> -->
+                    </div>
+
+                    <div class="messagesWrap">
+                        <div class="messages">
+
+                            <!-- <div class="message">
+                                <div class="photo">
+                                    <img src="img/girl1.png" alt="">
+                                </div>
+                                <div class="text">
+                                    <p>Тут находится сообщение Тут находится сообщение Тут находится сообщение</p>
+                                </div>
+                            </div>
+
+                            <div class="message me">
+                                <div class="photo">
+                                    <img src="img/girl1.png" alt="">
+                                </div>
+                                <div class="text">
+                                    <p>Тут находится сообщение Тут нах</p>
+                                </div>
+                            </div>
+
+                            <div class="message">
+                                <div class="photo">
+                                    <img src="img/girl1.png" alt="">
+                                </div>
+                                <div class="text">
+                                    <p>Тут находится сообщение Тут находится сообщение Тут находится сообщение</p>
+                                    <span class="time">21:22</span>
+                                </div>
+                            </div>
+
+                            <div class="message me">
+                                <div class="photo">
+                                    <img src="img/girl1.png" alt="">
+                                </div>
+                                <div class="text">
+                                    <p>Тут находится сообщение Тут нах</p>
+                                    <span class="time">21:22</span>
+                                </div>
+                            </div>
+
+                            <div class="message">
+                                <div class="photo">
+                                    <img src="img/girl1.png" alt="">
+                                </div>
+                                <div class="text">
+                                    <p>Тут находится сообщение Тут находится сообщение Тут находится сообщение</p>
+                                    <span class="time">21:22</span>
+                                </div>
+                            </div>
+
+                            <div class="message me">
+                                <div class="photo">
+                                    <img src="img/girl1.png" alt="">
+                                </div>
+                                <div class="text">
+                                    <p>Тут находится сообщение Тут нах</p>
+                                    <span class="time">21:22</span>
+                                </div>
+                            </div>
+
+                            <div class="message me">
+                                <div class="photo">
+                                    <img src="img/girl1.png" alt="">
+                                </div>
+                                <div class="text">
+                                    <p>Тут находится сообщение Тут нах</p>
+                                    <span class="time">21:22</span>
+                                </div>
+                            </div> -->
+
+                        </div>
+                    </div>
+
+                    <div class="textarea">
+                        <input type="text" placeholder="Write a message">
+                        <img src="img/smile.png" alt="">
+                        <button>
+                            <img src="img/send.png" alt="">
+                        </button>
+                    </div>
+
+                    <div class="mainPanel">
+                        <div class="mainPanelItem map chatWindow">
+                            <img src="img/lupa.svg" style="width: 26px;" alt="">
+                        </div>
+                        <div class="mainPanelItem active chat chatWindow">
+                            <img src="img/iconChat.svg" alt="">
+                        </div>
+                        <!-- <div class="mainPanelItem poker chatWindow">
+                            <img src="img/iconPoker.svg" alt="">
+                        </div>
+                        <div class="mainPanelItem media chatWindow">
+                            <img src="img/iconSocialMedia.svg" alt="">
+                        </div> -->
+                        <div class="mainPanelItem profile chatWindow">
+                            <img src="img/iconUser.svg" alt="">
+                        </div>
+                          
+                    </div>
+                </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+                <div class="tab user">
+
+
+                    <div class="videoModal" >
+                        <img src="img/close.svg" alt="">
+                        <div class="videoModalWrap">
+                            <video id="video" width="370" controls>
+                                <source src="">
+                            </video>
+                        </div>
+                    </div>
+
+                    <div class="settings_modal">
+                        <div class="settings_item logout">
+                            <span>Logout</span>
+                        </div>
+                        <div class="settings_item delete">
+                            <span>Delete account</span>
+                        </div>
+                    </div>
+
+
+                    <div class="firs_logo">
+                        <!-- <div class="crown">
+                            <img src="img/back.svg" alt="">
+                        </div> -->
+
+                        <img src="img/heart.svg" alt="heart">
+                        <span>TinGram</span>
+
+                        <!-- <div class="gear">
+                            <img src="img/filters.png" alt="">
+                        </div> -->
+                    </div>
+
+                    <div class="userAreaWrap">
+                        <div class="userArea">
+
+
+                            <div class="photo">
+                                <div class="premium">
+                                    <span>Premium</span>
+                                </div>
+                                <img src="" alt="">
+                                <button class="tabBtn">Send message</button>
+                            </div>
+
+                            
+                            <p class="mainName"></p>
+                            <div class="about">
+                                <span>About</span>
+                                <p>Lorem, ipsum dolor sit aluptatem?</p>
+                            </div>
+
+                            <div class="interest">
+                                <span>The main things</span>
+                                <div class="tagArea main">
+                                    <span class="tag">Relationship</span>
+                                    <span class="tag">Work</span>
+                                    <span class="tag">Sport</span>
+                                </div>
+                            </div>
+
+                            <div class="interest">
+                                <span>Interest</span>
+                                <div class="tagArea interests">
+                                    <span style="background-color: #7947B7;" class="tag">Search for a partner</span>
+                                    <span style="background-color: #5F8412;" class="tag">Engineer</span>
+                                    <span style="background-color: #B37619;" class="tag">Snowboard</span>
+                                </div>
+                            </div>
+                            
+                            
+
+
+
+                        </div>
+                    </div>
+
+                    <div class="mainPanel">
+                        <div class="mainPanelItem map otherUser">
+                            <img src="img/lupa.svg" style="width: 26px;" alt="">
+                        </div>
+                        <div class="mainPanelItem chat otherUser">
+                            <img src="img/iconChat.svg" alt="">
+                        </div>
+                        <!-- <div class="mainPanelItem active poker otherUser">
+                            <img src="img/iconPoker.svg" alt="">
+                        </div>
+                        <div class="mainPanelItem media otherUser">
+                            <img src="img/iconSocialMedia.svg" alt="">
+                        </div> -->
+                        <div class="mainPanelItem profile otherUser">
+                            <img src="img/iconUser.svg" alt="">
+                        </div>
+                          
+                    </div>
+                </div>
+
+
+
             </div> 
         </div>
   
     </section>
-
 
 </body>
 </html>

@@ -1,8 +1,14 @@
 type UserUpdate = record {userData: UserData;};
 type UserData = 
  record {
+   about: opt text;
+   conversations: vec opt text;
    dateOfBirth: opt text;
+   gender: opt text;
+   interests: vec opt text;
+   mainThings: vec opt text;
    name: opt text;
+   profileId: opt text;
    profilePhotos: vec opt text;
    profileVideoIds: vec nat;
  };
@@ -11,14 +17,38 @@ type User =
    id: principal;
    userData: UserData;
  };
+type Message = 
+ record {
+   messageId: opt text;
+   "text": opt text;
+   userId: opt text;
+   userPrincipalText: opt text;
+ };
+type ConversationObject = vec Message;
+type ConversationId = text;
 type ChunkId = nat;
 type ChunkData = text;
 service : {
+  allConversations: () ->
+   (vec record {
+          ConversationId;
+          ConversationObject;
+        }) query;
+  allUsers: () -> (vec record {
+                         principal;
+                         User;
+                       }) query;
+  chunksSize: () -> (nat) query;
   create: (UserUpdate) -> (text);
   delete: () -> (bool);
-  getChunk: (ChunkId) -> (opt ChunkData);
-  read: () -> (opt User);
+  deleteConversation: (ConversationId) -> (bool);
+  getChunk: (ChunkId) -> (opt ChunkData) query;
+  getConversation: (ConversationId) -> (opt ConversationObject) query;
+  getUser: (text) -> (opt User) query;
+  read: () -> (opt User) query;
   setChunk: (ChunkId, ChunkData) -> (text);
+  setConversation: (ConversationId, ConversationObject) -> (text);
   update: (User) -> (bool);
-  whoami: () -> (principal);
+  updateUserData: (text, UserUpdate) -> (text);
+  whoami: () -> (principal) query;
 }
