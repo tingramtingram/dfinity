@@ -14,12 +14,12 @@
     
     <section class="hi">
         <div class="firs_logo">
-            <img src="img/heart.svg" alt="heart">
-            <span>TinGram</span>
+            <!-- <img src="img/heart.svg" alt="heart">
+            <span>TinGram</span> -->
         </div>
         <div class="main_logo">
-            <img src="img/image-logo.png" alt="dfinity logo">
-            <img class="text" src="img/image-text.png" alt="dfinity">
+            <img style="max-width: 100px;" src="img/image-logo.png" alt="dfinity logo">
+            <img style="max-width: 200px;" class="text" src="img/image-text.png" alt="dfinity">
         </div>
         <span>Powered by</span>
     </section>
@@ -73,11 +73,22 @@
                 </div>
 
                 <div class="tab login">
-                    <div class="firs_logo">
-                        <img src="img/heart.svg" alt="heart">
-                        <span>TinGram</span>
+                    <!-- <img class="diamond" src="img/tingram.png" alt="diamond"> -->
+                    <!-- <p class="title">Log <span class="mod">In</span></p> -->
+                    <div class="background">
+                        <div class="logo_background">
+                            <img class="diamond" src="img/tingram.png" alt="diamond">
+                        </div>
+                        <p>Authorization via <br><span>Dfinity</span></p>
+                        <div class="login_variants">
+                            <div class="variant dfinity">
+                                <span class="pulse">
+                                    <img src="img/logo-mini.png" alt="">
+                                </span>
+                                
+                            </div>
+                        </div>
                     </div>
-                    <p class="title">Log <span class="mod">In</span></p>
                     <!-- <div class="global_input">
                         <span>Email address</span>
                         <input class="login_email" type="text" placeholder="Enter E-mail">
@@ -92,20 +103,8 @@
                     <!-- <button class="login">
                         <img src="img/login_arrow.svg" alt="">
                     </button> -->
-                    <div class="login_variants">
-                        <div class="variant dfinity">
-                            <img src="img/dfinitypng.png" alt="">
-                        </div>
-                        <!-- <div class="variant">
-                            <img src="img/instagram_circle.png" alt="">
-                        </div>
-                        <div class="variant">
-                            <img src="img/facebook_circle.png" alt="">
-                        </div>
-                        <div class="variant">
-                            <img src="img/google_circle.png" alt="">
-                        </div> -->
-                    </div>
+                    
+                    
                     <!-- <span class="forgot">Forgot your <a href="#">password</a>?</span>
                     <span class="newAccount">Don't you have an <a href="#">account</a>?</span> -->
                 </div>
@@ -258,21 +257,21 @@
                     <div class="photo_matrix">
                         <div class="photoBox default">
                             <img src="img/uploadGal.png" alt="">
-                            <input type="file" accept="image/*" capture >
+                            <input type="file" >
                            
                             
                         </div>
-                        <div class="photoBox default">
+                        <!-- <div class="photoBox default">
                             <img style="filter: invert(100%) sepia(100%) saturate(1%) hue-rotate(311deg) brightness(146%) contrast(101%);" src="img/videos_change.svg" alt="">
-                            <input type="file"  accept="video/*" >
-                        </div>
+                            <input type="file" >
+                        </div> -->
 
                     </div>
                     <div class="selectPhotos">
 
                     </div>
                     <div class="global_continue">
-                        <button class="continue createUser">Add photo</button>
+                        <button class="continue createUser">Create account</button>
                         <!-- <span class="haveAcc">Already have an <a href="#"> account</a>?</span> -->
                     </div>
                 </div>
@@ -282,9 +281,18 @@
 
                 <div class="tab profile">
 
+                    <div class="photoModal">
+                        <div class="deletePhoto">
+                            <img src="img/delete.svg" alt="">
+                        </div>
+                        <div class="closeModal">
+                            <img src="img/closed.svg" alt="">
+                        </div>
+                        <img class="mainModalImg" src="" alt="">
+                    </div>
 
                     <div class="videoModal" >
-                        <img src="img/close.svg" alt="">
+                        <img src="img/closed.svg" alt="">
                         <div class="videoModalWrap">
                             <video id="video" width="370" controls>
                                 <source src="">
@@ -301,36 +309,49 @@
                         </div>
                     </div>
                     <div class="firs_logo">
-                        <div class="crown">
-                            <img src="img/crown.svg" alt="">
-                        </div>
-
-                        <img src="img/heart.svg" alt="heart">
-                        <span>TinGram</span>
-
+    
                         <div class="gear">
                             <img src="img/gear.svg" alt="">
+                        </div>
+
+                        <img class="diamond" src="img/tingram.png" alt="diamond">
+                        <!-- <span>TinGram</span> -->
+
+                        <div class="crown">
+                            <img src="img/edit.svg" alt="">
                         </div>
                     </div>
 
                     <div class="profile_information">
                         <div class="left">
-                            <div class="photo_box">
-                                <img src="img/logo_profile.png" alt="">
+                            <div class="profilePhotoWrap">
+                                <div class="photo_box">
+                                    <img src="img/logo_profile.png" alt="">
+                                </div>
                                 <div class="upload">
-                                    <img src="img/upload_profile.png" alt="">
+                                    <img src="img/icon-camera.svg" alt="">
                                 </div>
                             </div>
+
                             <div class="name_age_box">
                                 <span class="name">Anna Jonson</span>
                                 <span class="age">20</span>
                             </div>
-                            <a href="" class="premium_button">
+                            <!-- <a href="" class="premium_button">
                                 <img src="img/premium_btn.png" alt="">
-                            </a>
+                            </a> -->
                         </div>
                         <div class="right">
-                            <div class="principal">
+                            <div class="profileBtn community">
+                                <img src="img/profileuser.svg" alt="">
+                                <span>My community</span>
+                            </div>
+
+                            <div class="profileBtn wallet">
+                                <img src="img/wallet.svg" alt="">
+                                <span>My wallet</span>
+                            </div>
+                            <!-- <div class="principal">
                                 <span>Your Principal Id</span>
                                 <div class="principal-wrap">
                                     <img src="img/paper.png" alt="">
@@ -358,18 +379,21 @@
                                     <p>Buy TIN</p>
                                     <span>Add</span>
                                 </div>
-                            </a>
+                            </a> -->
                         </div>
                     </div>
 
-                    <!-- <div class="profile_tabs_photos">
+                    <div class="profile_tabs_photos">
                         <div class="change photos active">
-                            <img src="img/photos_change.svg" alt="">
+                            <img src="img/pv.svg" alt="">
                         </div>
-                        <div class="change videos">
-                            <img src="img/videos_change.svg" alt="">
+                        <div class="change blog">
+                            <img src="img/pv2.svg" alt="">
                         </div>
-                    </div> -->
+                        <div class="change info">
+                            <img src="img/pv3.svg" alt="">
+                        </div>
+                    </div>
 
                     <div class="selectPhotos">
                         <div class="selectPhotosWrap">
@@ -436,7 +460,7 @@
                     </div>
 
                     <div class="videoModal" >
-                        <img src="img/close.svg" alt="">
+                        <img src="img/closed.svg" alt="">
                         <div class="videoModalWrap">
                             <video id="video" width="370" controls>
                                 <source src="">
@@ -453,12 +477,11 @@
                         </div>
                     </div>
                     <div class="firs_logo">
-                        <div class="crown">
+                        <!-- <div class="crown">
                             <img src="img/crown.svg" alt="">
-                        </div>
+                        </div> -->
 
-                        <img src="img/heart.svg" alt="heart">
-                        <span>TinGram</span>
+                        <img class="diamond" event="back" value="1" src="img/tingram.png" alt="diamond">
 
                         <div class="gear">
                             <img src="img/filters.png" alt="">
@@ -537,7 +560,7 @@
 
 
                     <div class="videoModal" >
-                        <img src="img/close.svg" alt="">
+                        <img src="img/closed.svg" alt="">
                         <div class="videoModalWrap">
                             <video id="video" width="370" controls>
                                 <source src="">
@@ -554,16 +577,15 @@
                         </div>
                     </div>
                     <div class="firs_logo">
-                        <div class="crown">
+                        <!-- <div class="crown">
                             <img src="img/crown.svg" alt="">
-                        </div>
-
-                        <img src="img/heart.svg" alt="heart">
-                        <span>TinGram</span>
-
-                        <!-- <div class="gear">
-                            <img src="img/filters.png" alt="">
                         </div> -->
+
+                        <img class="diamond" event="back" value="2" src="img/tingram.png" alt="diamond">
+
+                        <div class="gear">
+                            <img src="img/gear.svg" alt="">
+                        </div>
                     </div>
 
                    <div class="createChat">
@@ -649,14 +671,39 @@
                     </div>
                 </div>
 
-
-
-
                 <div class="tab chat">
-
-
+                    <div class="smileModal">
+                        <div class="item" value="-=hi=-">
+                            <img class="emoji" src="img/emoji/hi.png" alt="">
+                        </div>
+                        <div class="item" value="-=bad=-">
+                            <img class="emoji" src="img/emoji/bad.png" alt="">
+                        </div>
+                        <div class="item" value="-=laugh=-">
+                            <img class="emoji" src="img/emoji/laugh.png" alt="">
+                        </div>
+                        <div class="item" value="-=like=-">
+                            <img class="emoji" src="img/emoji/like.png" alt="">
+                        </div>
+                        <div class="item" value="-=nia=-">
+                            <img class="emoji" src="img/emoji/nia.png" alt="">
+                        </div>
+                        <div class="item" value="-=ooh=-">
+                            <img class="emoji" src="img/emoji/ooh.png" alt="">
+                        </div>
+                        <div class="item" value="-=rage=-">
+                            <img class="emoji" src="img/emoji/rage.png" alt="">
+                        </div>
+                        <div class="item" value="-=smile=-">
+                            <img class="emoji" src="img/emoji/smile.png" alt="">
+                        </div>
+                        <div class="item" value="-=super=-">
+                            <img class="emoji" src="img/emoji/super.png" alt="">
+                        </div>
+                    </div>
+                    
                     <div class="videoModal" >
-                        <img src="img/close.svg" alt="">
+                        <img src="img/closed.svg" alt="">
                         <div class="videoModalWrap">
                             <video id="video" width="370" controls>
                                 <source src="">
@@ -770,7 +817,7 @@
 
                     <div class="textarea">
                         <input type="text" placeholder="Write a message">
-                        <img src="img/smile.png" alt="">
+                        <img class="smilebtn" src="img/smile.png" alt="">
                         <button>
                             <img src="img/send.png" alt="">
                         </button>
@@ -810,9 +857,15 @@
 
                 <div class="tab user">
 
+                    <div class="photoModal">
+                        <div class="closeModal">
+                            <img src="img/close.svg" alt="">
+                        </div>
+                        <img class="mainModalImg" src="" alt="">
+                    </div>
 
                     <div class="videoModal" >
-                        <img src="img/close.svg" alt="">
+                        <img src="img/closed.svg" alt="">
                         <div class="videoModalWrap">
                             <video id="video" width="370" controls>
                                 <source src="">
@@ -831,61 +884,74 @@
 
 
                     <div class="firs_logo">
+    
+                        <div class="gear">
+                            <img src="img/gear.svg" alt="">
+                        </div>
+
+                        <img class="diamond" event="back" value="4" src="img/tingram.png" alt="diamond">
+                        <!-- <span>TinGram</span> -->
+
                         <!-- <div class="crown">
-                            <img src="img/back.svg" alt="">
-                        </div> -->
-
-                        <img src="img/heart.svg" alt="heart">
-                        <span>TinGram</span>
-
-                        <!-- <div class="gear">
-                            <img src="img/filters.png" alt="">
+                            <img src="img/edit.svg" alt="">
                         </div> -->
                     </div>
 
-                    <div class="userAreaWrap">
-                        <div class="userArea">
-
-
-                            <div class="photo">
-                                <div class="premium">
-                                    <span>Premium</span>
+                    <div class="profile_information">
+                        <div class="left">
+                            <div class="profilePhotoWrap">
+                                <div class="photo_box">
+                                    <img src="img/logo_profile.png" alt="">
                                 </div>
-                                <img src="" alt="">
-                                <button class="tabBtn">Send message</button>
+                                <!-- <div class="upload">
+                                    <img src="img/icon-camera.svg" alt="">
+                                </div> -->
                             </div>
 
-                            
-                            <p class="mainName"></p>
-                            <div class="about">
-                                <span>About</span>
-                                <p>Lorem, ipsum dolor sit aluptatem?</p>
-                            </div>
-
-                            <div class="interest">
-                                <span>The main things</span>
-                                <div class="tagArea main">
-                                    <span class="tag">Relationship</span>
-                                    <span class="tag">Work</span>
-                                    <span class="tag">Sport</span>
-                                </div>
-                            </div>
-
-                            <div class="interest">
-                                <span>Interest</span>
-                                <div class="tagArea interests">
-                                    <span style="background-color: #7947B7;" class="tag">Search for a partner</span>
-                                    <span style="background-color: #5F8412;" class="tag">Engineer</span>
-                                    <span style="background-color: #B37619;" class="tag">Snowboard</span>
-                                </div>
+                            <div class="name_age_box">
+                                <span class="name">Anna Jonson</span>
+                                <span class="age">20</span>
                             </div>
                             
-                            
+                        </div>
+                        <div class="right">
+                            <div class="profileBtn sendMessage">
+                                <img src="img/sendmessage.svg" alt="">
+                                <span>Send Message</span>
+                            </div>
 
+                            <div class="profileBtn subscribe" event="subscribe">
+                                <img src="img/subscribe.svg" alt="">
+                                <span>Subscribe</span>
+                            </div>
+                            
+                        </div>
+                    </div>
+
+                    <div class="profile_tabs_photos">
+                        <div class="change photos active">
+                            <img src="img/pv.svg" alt="">
+                        </div>
+                        <div class="change blog">
+                            <img src="img/pv2.svg" alt="">
+                        </div>
+                        <div class="change info">
+                            <img src="img/pv3.svg" alt="">
+                        </div>
+                    </div>
+
+                    <div class="selectPhotos">
+                        <div class="selectPhotosWrap">
+
+                            <!-- <div class="child">
+                                <img src="img/girl1.png" alt="">
+                            </div> -->
 
 
                         </div>
                     </div>
+
+                    
 
                     <div class="mainPanel">
                         <div class="mainPanelItem map otherUser">
@@ -909,10 +975,143 @@
 
 
 
+
+
+
+
+
+
+                <div class="tab community">
+
+
+           
+
+                    <div class="settings_modal">
+                        <div class="settings_item logout">
+                            <span>Logout</span>
+                        </div>
+                        <div class="settings_item delete">
+                            <span>Delete account</span>
+                        </div>
+                    </div>
+
+
+                    <div class="firs_logo">
+                        <div class="gear right">
+                            <img src="img/gear.svg" alt="">
+                        </div>
+
+                        <img class="diamond" event="back" value="5" src="img/tingram.png" alt="diamond">
+
+                        <!-- <div class="gear">
+                            <img src="img/filters.png" alt="">
+                        </div> -->
+                    </div>
+
+                    <div class="mainWrapCommunity">
+                        <div class="tabPanel">
+                            <div tab="1" class="tab active subscriptions">
+                                <span>Subscriptions 0</span>
+                            </div>
+                            <div tab="2" class="tab subscribers">
+                                <span>Subscribers 0</span>
+                            </div>
+                        </div>
+
+                        <div class="tabItem active" tab="1">
+                            <div class="search">
+                                <img src="img/lupa_sub.svg" alt="">
+                                <input type="text" placeholder="Search">
+                            </div>
+                            <div class="listWrap">
+                                <span>Subscriptions</span>
+                                <!-- <div class="list">
+                                    <div class="item">
+                                        <div class="photo">
+                                            <img src="img/me.jpg" alt="">
+                                        </div>
+                                        <div class="name">
+                                            <span>Herry Hopens</span>
+                                        </div>
+                                        <div class="button">
+                                            <button>Unsubscribe</button>
+                                        </div>
+                                    </div>
+                                    <div class="item">
+                                        <div class="photo">
+                                            <img src="img/me.jpg" alt="">
+                                        </div>
+                                        <div class="name">
+                                            <span>Herry Hopens</span>
+                                        </div>
+                                        <div class="button">
+                                            <button>Unsubscribe</button>
+                                        </div>
+                                    </div>
+
+                                </div> -->
+                            </div>
+                        </div>
+                        <div class="tabItem" tab="2">
+                            <div class="search">
+                                <img src="img/lupa_sub.svg" alt="">
+                                <input type="text" placeholder="Search">
+                            </div>
+                            <div class="listWrap">
+                                <span>Subscribers</span>
+                                <!-- <div class="list">
+                                    <div class="item">
+                                        <div class="photo">
+                                            <img src="img/me.jpg" alt="">
+                                        </div>
+                                        <div class="name">
+                                            <span>Herry Hopens</span>
+                                        </div>
+                                        <div class="button">
+                                            <button class="add">Subscribe</button>
+                                            <button class="remove">
+                                                <img src="img/del_user.svg" alt="">
+                                            </button>
+                                        </div>
+                                    </div>
+
+
+                                </div> -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mainPanel">
+                        <div class="mainPanelItem map community">
+                            <img src="img/lupa.svg" style="width: 26px;" alt="">
+                        </div>
+                        <div class="mainPanelItem chat community">
+                            <img src="img/iconChat.svg" alt="">
+                        </div>
+                        <!-- <div class="mainPanelItem active poker otherUser">
+                            <img src="img/iconPoker.svg" alt="">
+                        </div>
+                        <div class="mainPanelItem media otherUser">
+                            <img src="img/iconSocialMedia.svg" alt="">
+                        </div> -->
+                        <div class="mainPanelItem profile community">
+                            <img src="img/iconUser.svg" alt="">
+                        </div>
+                          
+                    </div>
+                </div>
+
+
+
+
+
+
+
             </div> 
         </div>
   
     </section>
 
+ 
 </body>
 </html>

@@ -11,8 +11,9 @@ actor Tingram {
     type UserData = {
         name : ?Text;
         dateOfBirth : ?Text;
-        profilePhotos : [?Text];
-        profileVideoIds : [Nat];
+        profilePhotosIds : [?Text];
+        profileVideoIds : [?Text];
+        mainPhoto : ?Text;
         profileId : ?Text;
         gender : ?Text;
         mainThings : [?Text];
@@ -35,8 +36,8 @@ actor Tingram {
         #AlreadyExists;
     };
 
-    type VideoId = Nat;
-    type ChunkId = Nat;
+    type VideoId = Text;
+    type ChunkId = Text;
     type ChunkData = Text;
 
     type ConversationId = Text;
@@ -51,6 +52,58 @@ actor Tingram {
     stable var users : Trie.Trie<Principal, User> = Trie.empty();
     stable var chunks : Trie.Trie<VideoId, ChunkData> = Trie.empty();
     stable var messages : Trie.Trie<ConversationId, ConversationObject> = Trie.empty();
+    stable var subscriptions : Trie.Trie<Text, [Text]> = Trie.empty();
+    stable var subscribers : Trie.Trie<Text, [Text]> = Trie.empty();
+    stable var photos : Trie.Trie<Text, Text> = Trie.empty();
+
+    public func setPhoto(photoId : Text, base64 : Text) : async Text {
+        let (newPhoto, existing) = Trie.put(photos, keyText(photoId), Text.equal, base64);
+        photos := newPhoto;
+        let message : Text = "newPhotoUploaded";
+        return message;
+    };
+
+    public query func getPhoto(photoId : Text) : async ?Text {
+        let result = Trie.find(photos, keyText(photoId), Text.equal);
+        return result;
+    };
+
+    public func deletePhoto(photoId : Text) : async Bool {
+
+        let result = Trie.find(photos, keyText(photoId), Text.equal);
+
+        switch (result) {
+            case null {return false};
+            case (? v) {photos := Trie.replace(photos, keyText(photoId), Text.equal, null).0};
+        };
+
+        return true;
+    };
+    
+    public func setSubscriptions(princ : Text, data : [Text]) : async Text {
+        let (newSubscriptionsObject, existing) = Trie.put(subscriptions, keyText(princ), Text.equal, data);
+        subscriptions := newSubscriptionsObject;
+        let message : Text = "newSubscriptionsObject Created";
+        return message;
+    };
+
+    public query func getSubscriptions(princ : Text) : async ?[Text] {
+        let result = Trie.find(subscriptions, keyText(princ), Text.equal);
+        return result;
+    };
+
+    public func setSubscribers(princ : Text, data : [Text]) : async Text {
+        let (newSubscribersObject, existing) = Trie.put(subscribers, keyText(princ), Text.equal, data);
+        subscribers := newSubscribersObject;
+        let message : Text = "subscribers object Created";
+        return message;
+    };
+
+    public query func getSubscribers(princ : Text) : async ?[Text] {
+        let result = Trie.find(subscribers, keyText(princ), Text.equal);
+        return result;
+    };
+
 
     public query(msg) func whoami() : async Principal {
         msg.caller
@@ -82,23 +135,36 @@ actor Tingram {
 
 
 
-    public shared(msg) func setChunk(chunkNumber : ChunkId, chunkData : ChunkData) : async Text {
-        let chunk = chunkNumber;
+    public shared(msg) func setChunk(chunkHash : ChunkId, chunkData : ChunkData) : async Text {
+        let chunk = chunkHash;
         let data = chunkData;
         // let asText = debug_show video # debug_show chunk;
         // let asPair = (video, chunk); 
 
-        let (newChunk, existing) = Trie.put(chunks, keyNat(chunk), Nat.equal, data);
+        let (newChunk, existing) = Trie.put(chunks, keyText(chunk), Text.equal, data);
         chunks := newChunk;
         let message : Text = "Chunk Created";
         return message;
     };
 
-    public query func getChunk(chunkNumber : ChunkId) : async ?ChunkData {
-        let chunk = chunkNumber;
-        let result = Trie.find(chunks, keyNat(chunk), Nat.equal);
+    public query func getChunk(chunkHash : ChunkId) : async ?ChunkData {
+        let chunk = chunkHash;
+        let result = Trie.find(chunks, keyText(chunk), Text.equal);
         return result;
     };
+
+    public func deleteChunk(chunkHash : ChunkId) : async Bool {
+
+        let result = Trie.find(chunks, keyText(chunkHash), Text.equal);
+
+        switch (result) {
+            case null {return false};
+            case (? v) {chunks := Trie.replace(chunks, keyText(chunkHash), Text.equal, null).0};
+        };
+
+        return true;
+    };
+
 
     public shared(msg) func create (user: UserUpdate) : async Text {
         let callerId = msg.caller;

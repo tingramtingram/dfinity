@@ -5,7 +5,18 @@ import { Actor, HttpAgent } from "@dfinity/agent";
 import { tin, canisterId, createActor } from "../../declarations/tin";
 import { setUncaughtExceptionCaptureCallback } from "process";
 
-
+// if ('serviceWorker' in navigator) {
+//     window.addEventListener('load', function() {  
+//       navigator.serviceWorker.register('sw.js').then(
+//         function(registration) {
+//           // Registration was successful
+//           console.log('ServiceWorker registration successful with scope: ', registration.scope); },
+//         function(err) {
+//           // registration failed :(
+//           console.log('ServiceWorker registration failed: ', err);
+//         });
+//     });
+//    }
 
 let preloader          = document.querySelector('.loader');
 let hi                 = document.querySelector('section.hi');
@@ -133,16 +144,47 @@ gear.addEventListener('click', async function() {
         console.log('получили наш профиль')
         console.log('получили массив с номерами наших бесед');
         console.log(myProf[0].userData.conversations);
-        // собираем массив с обещаниями 
+        console.log('получили массив с номерами наших видео');
+        console.log(myProf[0].userData.profileVideoIds);
+        console.log('получили массив с номерами наших фото');
+        console.log(myProf[0].userData.profilePhotosIds);
+        // // собираем массив с обещаниями 
+        let promiseDeletePhotos = [];
+        myProf[0].userData.profilePhotosIds.forEach((el) => {
+            promiseDeletePhotos.push(actor.deletePhoto(el[0]))
+        });
         let promiseDeleteConvers = [];
         myProf[0].userData.conversations.forEach((el) => {
             promiseDeleteConvers.push(actor.deleteConversation(el[0]));
         });
+        let promiseDeleteVideoChunks = [];
+        myProf[0].userData.profileVideoIds.forEach((el) => {
+            console.log('VIDEO ID');
+            console.log(el[0]);
+            // так же пушим хэш превью к видео 
+            promiseDeleteVideoChunks.push(actor.deleteChunk(el[0] + String(99)));
+            // запускаем цикл сборки обещаний на удаления каждого чанка каждого видео
+            for(let i = 0; i < 12; i++) {
+                promiseDeleteVideoChunks.push(actor.deleteChunk(el[0] + String(i)));
+            };
+        });
         let res = await actor.delete();
         console.log('Удалили аккаунт')
-        const responses = await Promise.all(promiseDeleteConvers).then((data) => {
+
+        await Promise.all(promiseDeleteConvers).then((data) => {
             console.log(data);
             console.log('удалили беседы')
+            preloaderOff();
+            // location.reload();
+        });
+        await Promise.all(promiseDeletePhotos).then((data) => {
+            console.log(data);
+            console.log('удалили все фото')
+            preloaderOff();
+        });
+        await Promise.all(promiseDeleteVideoChunks).then((data) => {
+            console.log(data);
+            console.log('удалили все чанки видео')
             preloaderOff();
             location.reload();
         });
@@ -167,12 +209,33 @@ function messageForHeart(message) {
 
 let myPrincipal = '';
 let myProfId = '';
+let myPhotoIds = '';
 let myPhoto = '';
 let myName = '';
 
 let lastViewedProfilePhoto;
 let lastViewedProfileName;
 
+
+// listen button myCommunity
+let communityButton = document.querySelector('.profileBtn.community');
+communityButton.addEventListener('click', function() {
+    runRoll();runRoll();runRoll();runRoll();runRoll();
+    openCommunity();
+    console.log('fdf')
+});
+
+// listen button myWallet
+let myWalletButton = document.querySelector('.profileBtn.wallet');
+myWalletButton.addEventListener('click', function() {
+    alert('Soon')
+});
+
+// listen button editProfile
+let profileEditButton = document.querySelector('.tab.profile .firs_logo .crown');
+profileEditButton.addEventListener('click', function() {
+    alert('soon')
+});
 
 
 async function getProfile(rollBacks, principal) {
@@ -188,29 +251,30 @@ async function getProfile(rollBacks, principal) {
 
 
     // RENDER PRINCIPAL 
-    messageForHeart('Get your Principal Id');
-    let principalString = principal.toString();
+    // messageForHeart('Get your Principal Id');
+    // let principalString = principal.toString();
     myPrincipal = principal.toString();
-    let lastPrincipal = principalString.slice(-3);
-    let firstPrincipal = principalString.substring(0, 5);
-    let miniPrincipal = firstPrincipal + "..." + lastPrincipal;
+    // let lastPrincipal = principalString.slice(-3);
+    // let firstPrincipal = principalString.substring(0, 5);
+    // let miniPrincipal = firstPrincipal + "..." + lastPrincipal;
 
     if (res.length > 0) {
         myProfId = res[0].userData.profileId;
-        myPhoto = res[0].userData.profilePhotos[0];
+        myPhotoIds = res[0].userData.profilePhotosIds;
+        myPhoto = res[0].userData.mainPhoto;
         myName = res[0].userData.name;
-        let principalP = document.querySelector('.principal p');
-        if (principal !== null) {
-            principalP.setAttribute('full', principalString);
-            principalP.innerHTML = miniPrincipal;
-            let principalItem = document.querySelector('.principal');
-            principalItem.addEventListener('click', function() {
-                let full = principalP.getAttribute('full');
-                console.log(full);
-                navigator.clipboard.writeText(full);
-            });
+        // let principalP = document.querySelector('.principal p');
+        // if (principal !== null) {
+        //     principalP.setAttribute('full', principalString);
+        //     principalP.innerHTML = miniPrincipal;
+        //     let principalItem = document.querySelector('.principal');
+        //     principalItem.addEventListener('click', function() {
+        //         let full = principalP.getAttribute('full');
+        //         console.log(full);
+        //         navigator.clipboard.writeText(full);
+        //     });
             
-        }
+        // }
         // END RENDER PRINCIPAL
 
         paginationWrapper.remove();
@@ -226,13 +290,26 @@ async function getProfile(rollBacks, principal) {
         let resultAge = Math.floor(resultMs / (1000 * 60 * 60 * 24 * 30 * 12));
         dateOfBirth.innerHTML = resultAge;
         // конец вывода даты
+        // составляем массив обещаний на получение фото профиля и получаем фото
+        let photoPromiseArr = [];
+        myPhotoIds.forEach((el) => {
+            photoPromiseArr.push(actor.getPhoto(el[0]));
+        });
         
-        let profilePhotos = res[0].userData.profilePhotos;
+        console.log('PHOTO IDS');
+        console.log(myPhotoIds);
+        let resultPhotos = await Promise.all(photoPromiseArr).then((data) => {
+            console.log('ПОЛУЧИЛИ ВСЕ НАШИ ФОТО');
+            console.log(data);
+            return data;
+        });
+
+        let profilePhotos = resultPhotos;
         let profilePhotosWrap = document.querySelector('.selectPhotosWrap');
         let mainPhoto = document.querySelector('.left .photo_box img');
         mainPhoto.src = profilePhotos[0][0];
-        profilePhotos.forEach((el) => {
-            let child = '<div class="child"><img src="'+ el[0] +'" alt=""></div>';
+        profilePhotos.forEach((el, index) => {
+            let child = '<div class="child"><img class="photoChildImg" principal="'+ myPrincipal +'" baseid="'+ myPhotoIds[index][0] +'" src="'+ el[0] +'" alt=""></div>';
             profilePhotosWrap.innerHTML += child;
         });
 
@@ -240,39 +317,62 @@ async function getProfile(rollBacks, principal) {
         messageForHeart('Get your video ids');
 
         let getVideoIds = res[0].userData.profileVideoIds;
+        //получаем превьюшки видео 
+        console.log('НОМЕРА ВИДЕО');
+        console.log(getVideoIds);
+        //собираем номера наших превьюшек видео и складываем сразу в обещание на получение превьюшек
+        let previewsPromise = [];
+        for(let i = 0; i < getVideoIds.length; i++) {
+            previewsPromise.push(actor.getChunk(String(getVideoIds[i]) + String(99)));
+        };
+        const responsesPreview = await Promise.all(previewsPromise).then((data) => {
+            console.log('ПРИЕХАЛИ НАШИ ПРЕВЬЮШКИ')
+            
+            console.log(data);
+            return data
+        });
         // convert big int to number 
         let numbersResult = [];
         for(let i = 0; i < getVideoIds.length; i++) {
-            numbersResult.push(Number(getVideoIds[i]));
+            numbersResult.push(getVideoIds[i]);
         };
         //
         console.log(numbersResult);
         localStorage.setItem('profileVideoIds', JSON.stringify(numbersResult));
         console.log('НОМЕРА НАШИХ ВИДЕО: ' + JSON.parse(localStorage.getItem('profileVideoIds')));
-
         messageForHeart('Get your quantity videos');
         // УЗНАЕМ СКОЛЬКО ВИДЕО У НАС ЗАГРУЖЕНО 
-
         console.log('Количество наших видео:' + getVideoIds.length)
         // отображаем боксы видосов на странице 
         for(let j = 0; j < getVideoIds.length; j++) {
+            // <video id="video" width="135" height="180" controls>
+            //     <source src=""> 
+            // </video> 
             let videoItem = `
             <div class="child video" videoId="${getVideoIds[j]}" base64="">
-                <img src="img/play.jpg" alt="">
-                <div class="loading">
-                    <div class="loading_line_wrapper">
-                    <div class="loading_line">
-                        <div class="loading_line_inner loading_line_inner--1"></div>
-                        <div class="loading_line_inner loading_line_inner--2"></div>
-                    </div>
-                    </div>
-                </div>
+                <img class="videoPreview" src="${responsesPreview[j]}">
+                <img class="playVideo" src="img/play_video.png">
+              
             </div>
             `;
+            // let videoItem = `
+            // <div class="child video" videoId="${getVideoIds[j]}" base64="">
+            //     <img src="img/play.jpg" alt="">
+            //     <div class="loading">
+            //         <div class="loading_line_wrapper">
+            //         <div class="loading_line">
+            //             <div class="loading_line_inner loading_line_inner--1"></div>
+            //             <div class="loading_line_inner loading_line_inner--2"></div>
+            //         </div>
+            //         </div>
+            //     </div>
+            // </div>
+            // `;
             profilePhotosWrap.innerHTML += videoItem;
         };
         addEventListenersProfileVideos();
-        
+        addEventListenersProfilePhotos();
+        clickAllProfileVideos();
 
         preloaderOff();
 
@@ -300,17 +400,59 @@ async function getProfile(rollBacks, principal) {
     };
 };
 
+function clickAllProfileVideos() {
+    let allProfileVideoItems = document.querySelectorAll('.tab.profile .child.video');
+    allProfileVideoItems.forEach((el) => {
+        // console.log(el.getAttribute('base64'))
+        if (el.getAttribute('base64') ==  "") {
+            el.click();
+        }
+    });
+}
+
+function clickAllUserVideos() {
+    let allProfileVideoItems = document.querySelectorAll('.tab.user .child.video');
+    allProfileVideoItems.forEach((el) => {
+        // console.log(el.getAttribute('base64'))
+        if (el.getAttribute('base64') ==  "") {
+            el.click();
+        }
+    });
+}
 
 function addEventListenersProfileVideos() {
-    let allVideoItems = document.querySelectorAll('.selectPhotosWrap .child.video');
+    let allVideoItems = document.querySelectorAll('.tab.profile .selectPhotosWrap .child.video');
     if (allVideoItems) {
         allVideoItems.forEach((el) => {
             el.addEventListener('click', function() {
                 if (this.getAttribute('base64') == "") {
+                    console.log('видео не загружено');
+                    // начинаем загрузку видео 
                     let videoId = String(this.getAttribute('videoid'));
-                    let loadingItem = this.querySelector('.loading');
-                    loadingItem.classList.add('active');
-                    getFullVideoBase64(videoId, this, loadingItem);
+                    let state = this.getAttribute('state');
+                    console.log(state);
+                    if (state == null) {
+                        this.setAttribute('state','1');
+                        //програмное нажатие при входе в профиль
+                        let loader = this.querySelector('.loader-element');
+                        getFullVideoBase64(videoId, this, loader);
+                    }
+                    if (state == '1') {
+                        // let loader = this.querySelector('.loader-element');
+                        if (this.getAttribute('base64') == "") {
+                            // loader.classList.add('active');
+                            // добавляем лоадер видео еще не загружено
+                        } else {
+                            let videoModal = document.querySelector('.tab.profile .videoModal');
+                            let video = document.querySelector('.tab.profile .videoModal video');
+                            videoModal.classList.add('active');
+                            video.src = this.getAttribute('base64');
+                            video.play();
+                        }
+                    }
+                    // let loadingItem = this.querySelector('.loading');
+                    // loadingItem.classList.add('active');
+                    // getFullVideoBase64(videoId, this, loadingItem);
                 } else {
                     let base64code = this.getAttribute('base64');
                     let videoHtmlItem = `
@@ -327,7 +469,160 @@ function addEventListenersProfileVideos() {
             });
         });
     }
+     // прослушка крестика модалки с видео 
+     let videoModalWindow = document.querySelector('.tab.profile .videoModal');
+     let closeVideo = document.querySelector('.tab.profile .videoModal > img');
+     if (closeVideo) {
+         closeVideo.addEventListener('click', function() {
+             let videoTag = document.querySelector('.tab.profile .videoModalWrap video');
+             videoTag.remove();
+             if (videoModalWindow.classList.contains('active')) {
+                 videoModalWindow.classList.remove('active');
+             }
+         });
+     }
 
+};
+
+function addEventListenersUserVideos() {
+    let allVideoItems = document.querySelectorAll('.tab.user .selectPhotosWrap .child.video');
+    if (allVideoItems) {
+        allVideoItems.forEach((el) => {
+            el.addEventListener('click', function() {
+                if (this.getAttribute('base64') == "") {
+                    console.log('видео не загружено');
+                    // начинаем загрузку видео 
+                    let videoId = String(this.getAttribute('videoid'));
+                    let state = this.getAttribute('state');
+                    console.log(state);
+                    if (state == null) {
+                        this.setAttribute('state','1');
+                        //програмное нажатие при входе в профиль
+                        let loader = this.querySelector('.loader-element');
+                        getFullVideoBase64(videoId, this, loader);
+                    }
+                    if (state == '1') {
+                        // let loader = this.querySelector('.loader-element');
+                        if (this.getAttribute('base64') == "") {
+                            // loader.classList.add('active');
+                            // добавляем лоадер видео еще не загружено
+                        } else {
+                            let videoModal = document.querySelector('.tab.user .videoModal');
+                            let video = document.querySelector('.tab.user .videoModal video');
+                            videoModal.classList.add('active');
+                            video.src = this.getAttribute('base64');
+                            video.play();
+                        }
+                    }
+                    // let loadingItem = this.querySelector('.loading');
+                    // loadingItem.classList.add('active');
+                    // getFullVideoBase64(videoId, this, loadingItem);
+                } else {
+                    let base64code = this.getAttribute('base64');
+                    let videoHtmlItem = `
+                    <video id="video" width="370" controls>
+                        <source src="${base64code}">
+                    </video>
+                    `;
+                    let videoModal = document.querySelector('.tab.user .videoModal');
+                    let videoModalWrap = document.querySelector('.tab.user .videoModal .videoModalWrap');
+                    videoModalWrap.innerHTML = videoHtmlItem;
+                    videoModal.classList.add('active');
+                }
+    
+            });
+        });
+    }
+    // прослушка крестика модалки с видео 
+    let videoModalWindow = document.querySelector('.tab.user .videoModal');
+    let closeVideo = document.querySelector('.tab.user .videoModal > img');
+    if (closeVideo) {
+        closeVideo.addEventListener('click', function() {
+            let videoTag = document.querySelector('.tab.user .videoModalWrap video');
+            videoTag.remove();
+            if (videoModalWindow.classList.contains('active')) {
+                videoModalWindow.classList.remove('active');
+            }
+        });
+    }
+
+
+};
+
+// кнопка удаления фото в модалке 
+let deletePhotoBtns = document.querySelectorAll('.photoModal .deletePhoto');
+deletePhotoBtns.forEach((el) => {
+    el.addEventListener('click', async function() {
+        let baseid = this.parentElement.getAttribute('baseid');
+        let userPrincipal = this.parentElement.getAttribute('principal');
+        let userProf = await actor.getUser(userPrincipal);
+        console.log('получили профиль юзера')
+        let userProfile = userProf[0].userData;
+        // перебираем id фотографий профиля и удаляем id удаляемого фото
+        
+        userProfile.profilePhotosIds.forEach((el, ind) => {
+            if (el[0] == baseid) {
+                userProfile.profilePhotosIds.splice(ind, 1);
+            }
+        });
+        let resultObj = {
+            userData : userProfile
+        }
+
+        actor.updateUserData(userPrincipal, resultObj);
+
+        let res = await actor.deletePhoto(baseid);
+        console.log(res); 
+    });
+});
+
+function addEventListenersProfilePhotos() {
+    // gallery img popup 
+    let allProfileImgs = document.querySelectorAll('.tab.profile .selectPhotos .child img.photoChildImg');
+    allProfileImgs.forEach((el) => {
+        el.addEventListener('click', function() {
+            let baseid = this.getAttribute('baseid');
+            let userPrincipal = this.getAttribute('principal');
+            let targetImgSrc = this.src;
+            let photoModal = document.querySelector('.tab.profile .photoModal');
+            let modalImg = document.querySelector('.tab.profile .mainModalImg');
+            photoModal.classList.add('active');
+            photoModal.setAttribute('baseid', baseid);
+            photoModal.setAttribute('principal', userPrincipal);
+            modalImg.src = targetImgSrc;
+        });
+    });
+
+        //close img popup
+        let closeModal = document.querySelectorAll('.closeModal');
+        closeModal.forEach((el) => {
+            el.addEventListener('click', function() {
+                this.parentElement.classList.remove('active');
+            });
+        });
+};
+
+function addEventListenersUserPhotos() {
+    // gallery img popup 
+    let allProfileImgs = document.querySelectorAll('.tab.user .selectPhotos .child img.photoChildImg');
+    allProfileImgs.forEach((el) => {
+        el.addEventListener('click', function() {
+            let targetImgSrc = this.src;
+            console.log(targetImgSrc)
+            let photoModal = document.querySelector('.tab.user .photoModal');
+            let modalImg = document.querySelector('.tab.user .mainModalImg');
+            photoModal.classList.add('active');
+            modalImg.src = targetImgSrc;
+        });
+    });
+
+        //close img popup
+        let closeModal = document.querySelectorAll('.closeModal');
+        closeModal.forEach((el) => {
+            el.addEventListener('click', function() {
+                this.parentElement.classList.remove('active');
+            });
+        });
 };
 
 async function getFullVideoBase64(stringVideoId, videoItem, preloader) {
@@ -338,47 +633,38 @@ async function getFullVideoBase64(stringVideoId, videoItem, preloader) {
     let chunksFront = [];
     // getCh();
     
-    for(let i = 0; i < 14; i++) {
+    for(let i = 0; i < 12; i++) {
         let resultChunkId = stringVideoId + String(i);
         // let chunk = await actor.getChunk(Number(resultChunkId));
-        chunksFront.push(actor.getChunk(Number(resultChunkId)));
+        chunksFront.push(actor.getChunk(resultChunkId));
     };
     console.log("MASSIVE С ОБЕЩАНИЯММИ:" + chunksFront);
 
     const responses = await Promise.all(chunksFront).then((data) => {
-        preloader.classList.remove('active');
+        if (preloader !== null && preloader !== undefined) {
+            preloader.classList.remove('active');
+        }
         console.log('мы получили все обещания');
         console.log(data);
         console.log(typeof data);
         let base64code = data.join('');
         videoItem.setAttribute('base64', base64code);
-        let videoHtmlItem = `
-        <video id="video" width="370" controls>
-            <source src="${base64code}">
-        </video>
-        `;
-        let videoModal = document.querySelector('.videoModal');
-        let videoModalWrap = document.querySelector('.videoModal .videoModalWrap');
-        videoModalWrap.innerHTML = videoHtmlItem;
-        videoModal.classList.add('active');
+        // let videoHtmlItem = `
+        // <video id="video" width="370" controls>
+        //     <source src="${base64code}">
+        // </video>
+        // `;
+        // let videoModal = document.querySelector('.videoModal');
+        // let videoModalWrap = document.querySelector('.videoModal .videoModalWrap');
+        // videoModalWrap.innerHTML = videoHtmlItem;
+        // videoModal.classList.add('active');
     });
 };
 
-// прослушка крестика модалки с видео 
-let videoModalWindow = document.querySelector('.videoModal');
-let closeVideo = document.querySelector('.videoModal > img');
-if (closeVideo) {
-    closeVideo.addEventListener('click', function() {
-        let videoTag = document.querySelector('.videoModalWrap video');
-        videoTag.remove();
-        if (videoModalWindow.classList.contains('active')) {
-            videoModalWindow.classList.remove('active');
-        }
-    });
-}
 
 
 let videosBase64Array = [];
+let videoPreviews = [];
 let videoChunks = [];
 let nowLoadedVideoNumber = 0;
 
@@ -395,13 +681,12 @@ function makeid(count) {
 
 let videoIds = [];
 createUser.addEventListener('click', async function() {
-    let photos = document.querySelectorAll('.selectPhotos .photoBox.img');
+    let photos = document.querySelectorAll('.selectPhotos .photoBox.img img');
     
-    let photosArray = [];
-    photos.forEach((el) => {
-        photosArray.push([el.querySelector('img').src]);
-    });
-    if (photosArray.length == 0) {
+    console.log('НИЖЕ ФОТО ЭЛЕМЕНТЫ')
+    console.log(photos)
+
+    if (photos.length == 0) {
         alert('You need to upload at least one photo!');
     } else {
         preloaderOn();
@@ -410,13 +695,25 @@ createUser.addEventListener('click', async function() {
         let name = newName.value;
         let gender = '';
         if (genderElement) {gender = genderElement.textContent;}
+        console.log(newBirthDate.value)
+        // validate bithDate
+        let birthValues = newBirthDate.value.split('-');
         let birthDate = newBirthDate.value;
-        let profileId = makeid(8);
+
+        
+        
+        let profileId = makeid(16);
         let mainThings = [];
         let interests = [];
         let conversations = [];
         let about = newAbout.value;
 
+        // готовим id для наших фото [айди юзера + номер]
+        let photosIdsArray = [];
+        for (let i = 0; i < photos.length; i++) {
+            photosIdsArray.push([profileId + String(i)]);
+        };
+        
         let mainThingsActiveElements = document.querySelectorAll('.loginInterestsWrap .loginInterests .interest .tagArea span.mainThings.active');
         let interestsActiveElements = document.querySelectorAll('.loginInterestsWrap .loginInterests .interest.tab.active .zone.active');
         if (mainThingsActiveElements && interestsActiveElements) {
@@ -434,24 +731,32 @@ createUser.addEventListener('click', async function() {
         console.log(typeof mainThings[0]);
         // console.log(interests);
 
+        // глобальный массив всех обещаний на запись данных 
+        let globalPromiseArray = [];
+
+
 
         
+
         // узнаем сколько мы хотим загрузить видео, и создаем сколько нужно айдишников для видосов
         for(let i = 0; i < videosBase64Array.length; i++) {
-            let randomId = randomInteger(100, 99999);
-            videoIds.push(randomId);
+            let randomId = makeid(16);
+            videoIds.push([randomId]);
         };
         localStorage.setItem('profileVideoIds', JSON.stringify(videoIds));
         
         console.log('VideoIds которые запушим в мотоко');
         console.log(videoIds)
+        console.log('photosId которые запушим в мотоко')
+        console.log(photosIdsArray)
     
         let userData = {
             userData : {
                 dateOfBirth : [birthDate],
                 name : [name],
-                profilePhotos : photosArray,
+                profilePhotosIds : photosIdsArray,
                 profileVideoIds : videoIds,
+                mainPhoto: [photos[0].src],
                 profileId : [profileId],
                 gender : [gender],
                 mainThings : mainThings,
@@ -462,18 +767,49 @@ createUser.addEventListener('click', async function() {
         };
         messageForHeart('Create new User');
 
+        console.log(userData);
 
+
+        // LOAD PHOTOS TO MOTOKO
+        let photosPromiseArr = [];
+        for(let i = 0; i < photos.length; i++) {
+            let base64 = photos[i].src;
+            let key = photosIdsArray[i][0];
+            console.log('CICLE')
+            console.log(base64)
+            console.log(key)
+            photosPromiseArr.push(actor.setPhoto(key, base64));
+        };
+
+        await Promise.all(photosPromiseArr).then((data) => {
+            console.log('мы получили все обещания, все фото загружены в мотоко');
+            console.log(data);
+            console.log(typeof data);
+        });
+
+     
 
         // set videoIds
             // состовляем массив из массивов с чанками всех загруженых видео (после загрузки юзером они хранятся в videoBase64Array)
+        
         for(let i = 0; i < videosBase64Array.length; i++) {
-            let chunkArray = videosBase64Array[i].match(/.{1,1800000}/g);
+            let chunkArray = videosBase64Array[i][1].match(/.{1,1800000}/g);
+            videoPreviews.push(videosBase64Array[i][0]);
             videoChunks.push(chunkArray);
         };
+        console.log(videoPreviews);
         console.log(videoChunks);
 
-
-        await actor.create(userData);
+        console.log('начинаем создание юзера')
+        // создаем хранилища для подписок и подписчиков
+        globalPromiseArray.push(actor.setSubscriptions(who.toString(), []));
+        globalPromiseArray.push(actor.setSubscribers(who.toString(), []));
+        // кидаем в обещания основное создание пользователя
+        globalPromiseArray.push(actor.create(userData));
+        await Promise.all(globalPromiseArray).then((data) => {
+            console.log('Создали хранилища подписчиков и подписок а так же самого пользователя')
+            console.log(data);
+        });
         
         
         // LOAD VIDEOS TO MOTOKO
@@ -503,8 +839,10 @@ createUser.addEventListener('click', async function() {
                 let resultId = String(videoId) + String(chunkId);
                 chunkId += 1;
                 console.log('result chunk id:' + resultId);
-                resultIds.push(Number(resultId));
+                resultIds.push(resultId);
             };
+
+
             console.log('Список готовых номеров для чанков одного видео:' + resultIds);
             console.log('Количество чанков для одного видео:' + videoChunks[nowLoadedVideoNumber].length);
             // load chunks on backend
@@ -512,6 +850,13 @@ createUser.addEventListener('click', async function() {
             // let chunkNum = 0;
 
             let promiseArray = [];
+            // добавили к сборке обещания превью
+            let videoPreviewNumber = String(videoId) + String(99);
+            let videoPreviewValue = videoPreviews[nowLoadedVideoNumber];
+            promiseArray.push(actor.setChunk(videoPreviewNumber, videoPreviewValue));
+            console.log('presssssssss')
+            console.log(videoPreviewNumber)
+            console.log(videoPreviewValue)
             new Promise(async (resolve, reject) => {
                 for(let i = 0; i < resultIds.length + 1; i++) {
 
@@ -529,8 +874,6 @@ createUser.addEventListener('click', async function() {
                             resolve();
 
                         });
-                        
-                        
                     }
                 };
             }).then(() => {
@@ -577,12 +920,12 @@ if (logOut) {
 setTimeout(() => {
     fadeOut(hi, 10)
 }, 800);
-// }, 1);
+
 
 setTimeout(() => {
     runRoll();
 }, 1000);
-// }, 1);
+
 
 function fadeOut(element, time) {
     let opacity = 0.99;
@@ -663,7 +1006,16 @@ if (checkNameDate) {
             setTimeout(() => {
                 newDateInput.classList.remove('inputError');
             }, 2000);
-        } else {runRoll();}
+        } else {
+            let splittedDate = newDateInput.value.split('-');
+            if (splittedDate[0] > 1900 && splittedDate[0] < 2020) {
+                runRoll();
+            } else {
+                alert('wrong year of birth')
+            }
+            
+
+        }
     });
 } else {
     console.log('checkNameData not find')
@@ -710,51 +1062,124 @@ uploadImputs.forEach((el) => {
 });   
 
 
-
+// загрузка фото и видео upload photos and videos 
 let imgId = 1;
 let proverkaVesa = [];
 function onFileSelected(event) {
+    blockUpload();
 
     let selectedFile = event.target.files[0];
+
     let reader = new FileReader();
   
     
     reader.readAsDataURL(selectedFile);
+    
 
-    reader.onload = function(event) {
+    reader.onload = function(event2) {
         let boxWrapper = document.querySelector('.selectPhotos');
-            if (event.target.result.startsWith('data:video')) {
-                console.log('Это видео')
-                console.log(event);
-                let base64video = event.target.result;
+            if (event2.target.result.startsWith('data:video')) {
+                let size = Math.floor(selectedFile.size / 1024 / 1024);
+                if (size > 20) {
+                    alert('File larger than 20 megabytes')
+                } else {
+                    try {
+                        console.log('Это видео')
+                        console.log(event2);
+                        let base64video = event2.target.result;
+    
+        
+                        // let chunkArray = base64video.match(/.{1,1800000}/g);
+                        // proverkaVesa.push(chunkArray);
+                        // if (proverkaVesa[0].length > 12) {
+                        //     alert('The downloadable video exceeds 21 megabytes');
+                        // } else {
+                            
+    
+                            let idi = makeid(12);
+                            let newBox = `
+                            <div da="${idi}" class="photoBox video">
+                                <div class="duration">0:00</div>
+                                <canvas class="canva"></canvas>
+                                <div class="loader-element">
+                                    <svg class="spinner" width="25px" height="25px" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg">
+                                        <circle class="path" fill="none" stroke-width="6" stroke-linecap="round" cx="33" cy="33" r="30"></circle>
+                                    </svg>
+                                </div>
+                                <img class="preview" src="">
+                            </div>
+                            `;
+                            boxWrapper.innerHTML += newBox;
+                        // }
+        
+                        let boxer = document.querySelector('.photoBox[da="'+ idi +'"]');
+                        // <video id="video" width="123" height="240"></video>
+                        let videoHtmlItem = `
 
-                let chunkArray = base64video.match(/.{1,1800000}/g);
-                proverkaVesa.push(chunkArray);
-                // if (proverkaVesa[0].length > 12) {
-                //     alert('The downloadable video exceeds 21 megabytes');
-                // } else {
-                    videosBase64Array.push(base64video);
+                            <video id="video" width="323" height="640">
+                                <source src="${base64video}">
+                            </video>
+                        `;
+                        boxer.innerHTML += videoHtmlItem;
+                        let video = boxer.querySelector('video');
+                        if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+                            video.autoplay = true;
+                        }
+                            
+                        // video.currentTime = 15;
+        
+                        
+                        video.addEventListener('loadeddata', function(event) {
+                            
+                            let sec = this.duration;
+                            let durationBox = document.querySelector('.photoBox[da="'+ idi +'"] .duration');
+                            let time = Math.floor(sec / 60) + ':' + Math.floor(sec % 60);
+                            durationBox.innerText = time;
+        
+                            const canvas = document.querySelector('.photoBox[da="'+ idi +'"] .canva');
+                            canvas.width = 323;
+                            canvas.height = 640;
+                            const context = canvas.getContext('2d');
+        
+                            setTimeout(() => {
+                                context.drawImage(video, 0, 0, 320, 640);
+                                const dataURL = canvas.toDataURL(); // вот и ссылка с превью
+                                let boxPreview = document.querySelector('.photoBox[da="'+ idi +'"] .preview');
+                                boxPreview.src = dataURL;
+                                videosBase64Array.push([dataURL, base64video]);
+                                video.remove();
+                                canvas.remove();
+                                let boxPreloader = document.querySelector('.photoBox[da="'+ idi +'"] .loader-element');
+                                boxPreloader.remove();
+                                unBlockUpload();
+                            }, 1000);
+                    
+                        });
+                            
+                    } catch(e) {
+                        alert(e);
+                    }
+                }
+                
+               
+                
 
-                    let newBox = `
-                    <div class="photoBox video">
-                        <img class="" src="img/play.jpg" alt="">
-                    </div>
-                    `;
-                    boxWrapper.innerHTML += newBox;
-                // }
 
             } else {
-                
+                // console.log(event2.target.result)
+                let idi = makeid(12);
                 let newBox = `
-                <div class="photoBox img">
-                    <img class="user" src="${event.target.result}" imgId="${imgId}" alt="">
+                <div class="photoBox img" da="${idi}">
+                    <img class="user" src="${event2.target.result}" imgId="${imgId}" alt="">
+                    <div class="loader-element">
+                        <svg class="spinner" width="25px" height="25px" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg">
+                            <circle class="path" fill="none" stroke-width="6" stroke-linecap="round" cx="33" cy="33" r="30"></circle>
+                        </svg>
+                    </div>
                 </div>
                 `;
                 boxWrapper.innerHTML += newBox;
-                preloaderOn();
-                messageForHeart('Load photo');
-                
-                
+
                 setTimeout(() => {
                     let img = document.querySelector('img.user[imgId="' + imgId + '"]');
                     
@@ -778,12 +1203,14 @@ function onFileSelected(event) {
                         rea.onloadend = function() {
                             let basee = rea.result;
                             img.src = basee;
-                            preloaderOff();
+                            let imgBoxLoader = document.querySelector('.photoBox.img[da="'+ idi +'"] .loader-element');
+                            imgBoxLoader.remove();
                             imgId += 1;
-                            console.log(basee)
+                            unBlockUpload();
+                            
                         }
             
-                    }, 'image/jpeg', 0.5);
+                    }, 'image/jpeg', 0.8);
                     
                 }, 800);
             }
@@ -1016,6 +1443,11 @@ if (allPanelBtns) {
             // if (this.classList.contains('poker') && this.classList.contains('otherUser')) {rollBack();rollBack();rollBack(); getAllUsers();offMessagesInterval()}
             if (this.classList.contains('profile') && this.classList.contains('otherUser')) {rollBack();rollBack();rollBack();rollBack();offMessagesInterval()}
 
+
+            if (this.classList.contains('map') && this.classList.contains('community')) {rollBack();rollBack();rollBack();rollBack(); getAllUsers();offMessagesInterval()}
+            if (this.classList.contains('chat') && this.classList.contains('community')) {rollBack();rollBack();rollBack(); getAllUsers();offMessagesInterval(); getAllConversatioons();}
+            // if (this.classList.contains('poker') && this.classList.contains('otherUser')) {rollBack();rollBack();rollBack(); getAllUsers();offMessagesInterval()}
+            if (this.classList.contains('profile') && this.classList.contains('community')) {rollBack();rollBack();rollBack();rollBack();rollBack();offMessagesInterval()}
         });
     });
 
@@ -1123,7 +1555,7 @@ async function renderConversations(conversationsArr) {
             if (opanentPrincipal !== undefined && opanentPrincipal !== null) {
                 let data = await actor.getUser(opanentPrincipal);
                 console.log(data[0].userData)
-                conversationPhoto = data[0].userData.profilePhotos[0];
+                conversationPhoto = data[0].userData.mainPhoto;
                 conversationName = data[0].userData.name;
                 console.log('опанент найден выводим его информацию ')
             }
@@ -1265,7 +1697,7 @@ function renderAllUsers(result) {
         let yearsStatus = false;
 
         // рендер без выставленных фильтров
-        if (yearsFilter == [1,10000] && genderFilter == 'All') {
+        if (yearsFilter == [0,10000] && genderFilter == 'All') {
             forFilterAllUsers.push(el);
         }
 
@@ -1311,13 +1743,19 @@ function renderAllUsers(result) {
         let birthDate = Date.parse(el[1].userData.dateOfBirth);
         let resultMs = dateNow - birthDate;
         let resultAge = Math.floor(resultMs / (1000 * 60 * 60 * 24 * 30 * 12));
-
         // конец вывода даты
+
+        // находим первый айдишник фото юзера 
+        let firstPhoto = el[1].userData.mainPhoto;
+        console.log('ПЕРВЫЙ АЙДИ ФОТОГРАФИИ');
+        console.log(firstPhoto)
+        // получаем первое фото юзера
+
         let userItem = `
         <div class="user" principal="${el[1].id.toString()}">
         
             <div class="userPhoto">
-                <img src="${el[1].userData.profilePhotos[0]}" alt="">
+                <img src="${firstPhoto}" alt="">
             </div>
             <div class="userInfo">
                 <p>${el[1].userData.name}</p>
@@ -1329,7 +1767,19 @@ function renderAllUsers(result) {
         if (el[1].id.toString() !== myPrincipal) {
             allUsersWrap.innerHTML += userItem;
         }
-        
+        // let thisUserItem = document.querySelector('.allUsersWrap .allUsers .user[principal="'+ el[1].id.toString()+ '"]');
+        // console.log('наш юзер в цикле')
+        // console.log(thisUserItem)
+        // if (thisUserItem) {
+        //     console.log('дали прослушку')
+        //     console.log(thisUserItem)
+        //     thisUserItem.addEventListener('click', function() {
+        //         console.log('есть нажатие')
+        //         let principal = this.getAttribute('principal');
+        //         openUserProfile(principal);
+        //     });
+        // }
+       
     });
     let allUserItems = document.querySelectorAll('.allUsersWrap .allUsers .user');
     allUserItems.forEach((el) => {
@@ -1376,6 +1826,7 @@ async function openUserProfile(principalString, runRolls) {
     preloaderOn();
     messageForHeart('Download user profile');
     let user = await actor.getUser(principalString);
+    let mySubsriptions = await actor.getSubscriptions(who.toString());
     console.log(user);
     if (runRolls == null) {
         runRoll();
@@ -1385,23 +1836,169 @@ async function openUserProfile(principalString, runRolls) {
     if (runRolls == 1) {
         runRoll();
     }
+    if (runRolls == -1) {
+        rollBack();
+    }
 
-    renderUserProfile(user[0].userData, user[0].id);
+    renderUserProfile(user[0].userData, user[0].id, mySubsriptions);
 }
 
+// listen subscribe Button 
+let subscribeButton = document.querySelector('.tab.user .profileBtn.subscribe');
+subscribeButton.addEventListener('click', async function() {
+    let myPrincipalString = myPrincipal;
+    let opanentPrincipalString = this.getAttribute('profilePrincipal');
+    let event = this.getAttribute('event');
 
 
-function renderUserProfile(userData, principal) {
-    let photo = document.querySelector('.userAreaWrap .userArea .photo img');
-    let tagAreaMain = document.querySelector('.userAreaWrap .userArea .interest .tagArea.main');
-    let tagAreaInterests = document.querySelector('.userAreaWrap .userArea .interest .tagArea.interests');
-    let sendMessage = document.querySelector('.userAreaWrap .photo button.tabBtn');
-    let aboutBlock = document.querySelector('.userAreaWrap .userArea .about');
-    let aboutProfile = document.querySelector('.userAreaWrap .userArea .about p');
-    let mainName = document.querySelector('.mainName');
+ 
+    if (event == 'unsubscribe') {
+        this.classList.add('block');
+        subscribeButton.querySelector('span').innerText = 'Subscribe';
+        subscribeButton.setAttribute('event', 'subscribe');
+        let subscriptionObj = await actor.getSubscriptions(myPrincipalString);
+        let subscriberObj = await actor.getSubscribers(opanentPrincipalString);
+        let freshArr = [];
+        subscriptionObj[0].forEach((el) => {
+            if (el !== opanentPrincipalString) {
+                freshArr.push(el);
+            }
+        });
+        let res  = await actor.setSubscriptions(myPrincipalString, freshArr);
+        let freshArrOpanent = [];
+        subscriberObj[0].forEach((el) => {
+            if (el !== myPrincipalString) {
+                freshArr.push(el);
+            }
+        });
+        let res2 = await actor.setSubscribers(opanentPrincipalString, freshArrOpanent);
+        this.classList.remove('block');
+    } else {
+        this.classList.add('block');
+        subscribeButton.querySelector('span').innerText = 'Unsubscribe';
+        subscribeButton.setAttribute('event', 'unsubscribe');
+        let subscriptionObj = await actor.getSubscriptions(myPrincipalString);
+        let subscriberObj = await actor.getSubscribers(opanentPrincipalString);
+        // проверяем имеется ли принципал опанента в массиве если нет то добавляем 
+        let boo = subscriptionObj[0].includes(opanentPrincipalString);
+        console.log(boo);
+        // проверяем имеется ли наш принципал у апонента в подписках если нет то добавляем
+        let boo2 = subscriberObj[0].includes(myPrincipalString);
+        if (boo == false && boo2 == false) {
+
+            console.log('не подписаны');
+            subscriptionObj[0].push(opanentPrincipalString);
+            let res  = await actor.setSubscriptions(myPrincipalString, subscriptionObj[0]);
+            subscriberObj[0].push(myPrincipalString);
+            let res2 = await actor.setSubscribers(opanentPrincipalString, subscriberObj[0]);
+            this.classList.remove('block');
+            console.log(res)
+            console.log(res2)
+            
+        } else {
+            alert('you are following this user')
+        }
+    }
+  
+
+    
+
+
+});
+
+async function renderUserProfile(userData, principal, mySubscriptions) {
+    // сразу же получаем список наших подписчиков, и если человек есть в нашем списке меняем кнопку на отписаться.
+    let subscriber = mySubscriptions[0].includes(principal.toText());
+    if (subscriber == true) {
+        console.log('подписаны')
+        let subscribeButton = document.querySelector('.tab.user .profileBtn.subscribe');
+        subscribeButton.querySelector('span').innerText = 'Unsubscribe';
+        subscribeButton.setAttribute('event','unsubscribe');
+    }
+    //
+    let photo = document.querySelector('.tab.user .profile_information .photo_box img');
+    // let tagAreaMain = document.querySelector('.userAreaWrap .userArea .interest .tagArea.main');
+    // let tagAreaInterests = document.querySelector('.userAreaWrap .userArea .interest .tagArea.interests');
+    let sendMessage = document.querySelector('.tab.user .profileBtn.sendMessage');
+    // let aboutBlock = document.querySelector('.userAreaWrap .userArea .about');
+    // let aboutProfile = document.querySelector('.userAreaWrap .userArea .about p');
+    let mainName = document.querySelector('.tab.user .name_age_box .name');
+    let subscribeButton = document.querySelector('.tab.user .profileBtn.subscribe');
     
     sendMessage.setAttribute('profilePrincipal', principal.toText());
     sendMessage.setAttribute('profileId', userData.profileId);
+    subscribeButton.setAttribute('profilePrincipal', principal.toText());
+
+    let profilePhotosIds = userData.profilePhotosIds;
+    let getVideoIds = userData.profileVideoIds;
+    console.log('АЙДИШНИКИ ВСЕХ ФОТО ПОЛЬЗОВАТЕЛЯ');
+    console.log(profilePhotosIds)
+    console.log('АЙДИШНИКИ ВСЕХ ВИДЕО ПОЛЬЗОВАТЕЛЯ');
+    console.log(getVideoIds);
+    // собираем массив обещаний на получение фотографий
+    let photosPromise = [];
+    profilePhotosIds.forEach((el) => {
+        photosPromise.push(actor.getPhoto(el[0]));
+    });
+    // получаем обещания фотографий 
+    let photos = await Promise.all(photosPromise).then((data) => {
+        return data;
+    });
+    console.log('ПОЛУЧИЛИ ВСЕ ФОТО ЮЗЕРА')
+    console.log(photos)
+    let profilePhotosWrap = document.querySelector('.tab.user .selectPhotosWrap');
+    profilePhotosWrap.innerHTML = "";
+    photos.forEach((el) => {
+        let child = '<div class="child"><img class="photoChildImg" src="'+ el[0] +'" alt=""></div>';
+        profilePhotosWrap.innerHTML += child;
+    });
+    // закончили вывод фото в профиль юзера
+
+    // начинаем рендер видео в профиле юзера
+    //собираем номера наших превьюшек видео и складываем сразу в обещание на получение превьюшек
+    let previewsPromise = [];
+    for(let i = 0; i < getVideoIds.length; i++) {
+        previewsPromise.push(actor.getChunk(String(getVideoIds[i]) + String(99)));
+    };
+    const responsesPreview = await Promise.all(previewsPromise).then((data) => {
+        console.log('ПРИЕХАЛИ НАШИ ПРЕВЬЮШКИ')
+        console.log(data);
+        return data
+    });
+    // convert big int to number 
+    let numbersResult = [];
+    for(let i = 0; i < getVideoIds.length; i++) {
+        numbersResult.push(getVideoIds[i]);
+    };
+    //
+    console.log(numbersResult);
+    console.log('НОМЕРА ВИДЕО ПОЛЬЗОВАТЕЛЯ: ' + numbersResult);
+    messageForHeart('Get your quantity videos');
+    // УЗНАЕМ СКОЛЬКО ВИДЕО У НАС ЗАГРУЖЕНО 
+    console.log('Количество наших видео:' + getVideoIds.length)
+    // отображаем боксы видосов на странице 
+    for(let j = 0; j < getVideoIds.length; j++) {
+        // <video id="video" width="135" height="180" controls>
+        //     <source src=""> 
+        // </video> 
+        let videoItem = `
+        <div class="child video" videoId="${getVideoIds[j]}" base64="">
+            <img class="videoPreview" src="${responsesPreview[j]}">
+            <img class="playVideo" src="img/play_video.png">
+          
+        </div>
+        `;
+        
+        profilePhotosWrap.innerHTML += videoItem;
+    };
+    addEventListenersUserVideos();
+    addEventListenersUserPhotos();
+    clickAllUserVideos();
+    // addEventListenersProfileVideos();
+    // addEventListenersProfilePhotos();
+    // clickAllProfileVideos(); 
+
+
 
     let mainThings = userData.mainThings;
     let interests = userData.interests;
@@ -1409,39 +2006,39 @@ function renderUserProfile(userData, principal) {
     console.log(interests)
     console.log('ТАК ВЫГЛЯДИТ АБАУТ');
     console.log(userData.about)
-    if (userData.about.length == 0) {
-        aboutBlock.style.display = "none";
-    } else {
-        aboutBlock.style.display = "block";
-        aboutProfile.innerText = userData.about;
-    }
+    // if (userData.about.length == 0) {
+    //     aboutBlock.style.display = "none";
+    // } else {
+    //     aboutBlock.style.display = "block";
+    //     aboutProfile.innerText = userData.about;
+    // }
     
     mainName.innerText = userData.name;
-    photo.src = userData.profilePhotos[0];
-    lastViewedProfilePhoto = userData.profilePhotos[0];
+    photo.src = photos[0][0];
+    lastViewedProfilePhoto = photos[0][0];
     lastViewedProfileName = userData.name;
     
 
 
 
-    tagAreaMain.innerHTML = "";
-    for(let i = 0; i < mainThings.length; i++) {
-        let data = mainThings[i][0].split('#');
-        let mainTag = `
-            <span style="background-color: #${data[1]};" class="tag">${data[0]}</span>
-        `;
-        tagAreaMain.innerHTML += mainTag;
-    };
-    tagAreaInterests.innerHTML = "";
+    // tagAreaMain.innerHTML = "";
+    // for(let i = 0; i < mainThings.length; i++) {
+    //     let data = mainThings[i][0].split('#');
+    //     let mainTag = `
+    //         <span style="background-color: #${data[1]};" class="tag">${data[0]}</span>
+    //     `;
+    //     tagAreaMain.innerHTML += mainTag;
+    // };
+    // tagAreaInterests.innerHTML = "";
   
-    for(let i = 0; i < interests.length; i++) {
-        let data = interests[i][0].split('#');
-        let interestsTag = `
-            <span style="background-color: #${data[1]};" class="tag">${data[0]}</span>
-        `;
-        tagAreaInterests.innerHTML += interestsTag;
+    // for(let i = 0; i < interests.length; i++) {
+    //     let data = interests[i][0].split('#');
+    //     let interestsTag = `
+    //         <span style="background-color: #${data[1]};" class="tag">${data[0]}</span>
+    //     `;
+    //     tagAreaInterests.innerHTML += interestsTag;
 
-    };
+    // };
 
     preloaderOff();
 };
@@ -1451,7 +2048,7 @@ function renderUserProfile(userData, principal) {
 
 //////////////// CREATE CONVERSATION 
 
-let sendMsgButton = document.querySelector('.userAreaWrap .photo button.tabBtn');
+let sendMsgButton = document.querySelector('.tab.user .profileBtn.sendMessage');
 sendMsgButton.addEventListener('click', function(e) {
     preloaderOn();
     messageForHeart('Create chat');
@@ -1584,9 +2181,9 @@ function renderMessages(conversationId ,conversationObject, opanentProfileData) 
         opanentPhotoUrl = lastViewedProfilePhoto[0];
     } else {
         console.log('ДАЕМ ДАННЫЕ ОПАНЕНТУ ФОТО И ИМЯ ')
-        opanentPhoto.src = opanentProfileData.profilePhotos[0];
+        opanentPhoto.src = opanentProfileData.mainPhoto;
         opanentUpName.innerText = opanentProfileData.name;
-        opanentPhotoUrl = opanentProfileData.profilePhotos[0];
+        opanentPhotoUrl = opanentProfileData.mainPhoto;
     }
  
 
@@ -1601,6 +2198,22 @@ function renderMessages(conversationId ,conversationObject, opanentProfileData) 
         if (conversationObject[0][0] !== el) {
             let messageItem;
             console.log(myPhoto)
+            let messageText = el.text;
+            if (el.text[0].startsWith('-=')) {
+                let way;
+                switch(true) {
+                    case el.text == '-=smile=-' : way = 'img/emoji/smile.png';break;
+                    case el.text == '-=hi=-' : way = 'img/emoji/hi.png';break;
+                    case el.text == '-=bad=-' : way = 'img/emoji/bad.png';break;
+                    case el.text == '-=laugh=-' : way = 'img/emoji/laugh.png';break;
+                    case el.text == '-=like=-' : way = 'img/emoji/like.png';break;
+                    case el.text == '-=nia=-' : way = 'img/emoji/nia.png';break;
+                    case el.text == '-=ooh=-' : way = 'img/emoji/ooh.png';break;
+                    case el.text == '-=rage=-' : way = 'img/emoji/rage.png';break;
+                    case el.text == '-=super=-' : way = 'img/emoji/super.png';break;
+                }
+                messageText = `<img src="${way}" >`;
+            }
             if (el.userId == myProfId[0]) {
                 messageItem = `
                     <div class="message me" messageId="${el.messageId}">
@@ -1608,7 +2221,7 @@ function renderMessages(conversationId ,conversationObject, opanentProfileData) 
                             <img src="${myPhoto[0]}" alt="">
                         </div>
                         <div class="text">
-                            <p>${el.text}</p>
+                            <p>${messageText}</p>
                         </div>
                     </div>
                 `;
@@ -1619,7 +2232,7 @@ function renderMessages(conversationId ,conversationObject, opanentProfileData) 
                             <img src="${opanentPhotoUrl}" alt="">
                         </div>
                         <div class="text">
-                            <p>${el.text}</p>
+                            <p>${messageText}</p>
                         </div>
                     </div>
                 `;
@@ -1651,6 +2264,23 @@ function renderMessages(conversationId ,conversationObject, opanentProfileData) 
             fresh[0].forEach((el) => {
                 if (el !== fresh[0][0]) {
                     if (!pageMessagesIds.includes(el.messageId[0])) {
+                        let messageText = el.text
+                        if (el.text[0].startsWith('-=')) {
+                            console.log('зашли в пупи муняню')
+                            let way;
+                            switch(true) {
+                                case el.text == '-=smile=-' : way = 'img/emoji/smile.png';break;
+                                case el.text == '-=hi=-' : way = 'img/emoji/hi.png';break;
+                                case el.text == '-=bad=-' : way = 'img/emoji/bad.png';break;
+                                case el.text == '-=laugh=-' : way = 'img/emoji/laugh.png';break;
+                                case el.text == '-=like=-' : way = 'img/emoji/like.png';break;
+                                case el.text == '-=nia=-' : way = 'img/emoji/nia.png';break;
+                                case el.text == '-=ooh=-' : way = 'img/emoji/ooh.png';break;
+                                case el.text == '-=rage=-' : way = 'img/emoji/rage.png';break;
+                                case el.text == '-=super=-' : way = 'img/emoji/super.png';break;
+                            }
+                            messageText = `<img src="${way}" >`;
+                        }
                         let messageItem;
                         if (el.userId == myProfId[0]) {
                             messageItem = `
@@ -1659,19 +2289,18 @@ function renderMessages(conversationId ,conversationObject, opanentProfileData) 
                                         <img src="${myPhoto[0]}" alt="">
                                     </div>
                                     <div class="text">
-                                        <p>${el.text}</p>
+                                        <p>${messageText}</p>
                                     </div>
                                 </div>
                             `;
                         } else {
-            
                             messageItem = `
                                 <div class="message" messageId="${el.messageId}">
                                     <div class="photo">
                                         <img src="${opanentPhotoUrl}" alt="">
                                     </div>
                                     <div class="text">
-                                        <p>${el.text}</p>
+                                        <p>${messageText}</p>
                                     </div>
                                 </div>
                             `;
@@ -1727,6 +2356,17 @@ function renderMessages(conversationId ,conversationObject, opanentProfileData) 
         });
     }
 
+    // прослушка каждого смайлика 
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('emoji')) {
+            let value = e.target.parentElement.getAttribute('value');
+            sendMes(value);
+            let smilesModal = document.querySelector('.smileModal');
+            smilesModal.classList.remove('active');
+        };
+    });
+
+
     async function sendMes(message) {
         let freshConversationId = send.getAttribute('conversationId');
         
@@ -1747,13 +2387,29 @@ function renderMessages(conversationId ,conversationObject, opanentProfileData) 
                 textInput.value = "";
                 // выводим фейк в поле сообщений
                 let messageZone = document.querySelector('.messagesWrap .messages');
+                let messageText = message;
+                if (message.startsWith('-=')) {
+                    let way;
+                    switch(true) {
+                        case message == '-=smile=-' : way = 'img/emoji/smile.png';break;
+                        case message == '-=hi=-' : way = 'img/emoji/hi.png';break;
+                        case message == '-=bad=-' : way = 'img/emoji/bad.png';break;
+                        case message == '-=laugh=-' : way = 'img/emoji/laugh.png';break;
+                        case message == '-=like=-' : way = 'img/emoji/like.png';break;
+                        case message == '-=nia=-' : way = 'img/emoji/nia.png';break;
+                        case message == '-=ooh=-' : way = 'img/emoji/ooh.png';break;
+                        case message == '-=rage=-' : way = 'img/emoji/rage.png';break;
+                        case message == '-=super=-' : way = 'img/emoji/super.png';break;
+                    }
+                    messageText = `<img src="${way}" >`;
+                }
                 let messageItem = `
                     <div class="message me" messageId="${messageId}">
                         <div class="photo">
                             <img src="${myPhoto}" alt="">
                         </div>
                         <div class="text">
-                            <p>${message}</p>
+                            <p>${messageText}</p>
                         </div>
                     </div>
                 `;
@@ -1802,3 +2458,334 @@ function renderMessages(conversationId ,conversationObject, opanentProfileData) 
         rollBack();
         getAllUsers()
     });
+
+
+
+
+
+    async function openCommunity() {
+        //удаление листов с подписчиками и подписками если доэтого они рендерились
+        let lists = document.querySelectorAll('.mainWrapCommunity .listWrap .list');
+        if (lists) {
+            lists.forEach((el) => {
+                el.remove();
+            });
+        }
+        //tabs listener
+        let mainTabs = document.querySelectorAll('.mainWrapCommunity .tabPanel .tab');
+        mainTabs.forEach((el) => {
+            el.addEventListener('click', function() {
+                let tab = this.getAttribute('tab');
+                mainTabs.forEach((x) => {
+                    x.classList.remove('active');
+                });
+                this.classList.add('active');
+                let contentTabs = document.querySelectorAll('.mainWrapCommunity .tabItem');
+                contentTabs.forEach((y) => {
+                    if (y.getAttribute('tab') == tab) {
+                        y.classList.add('active');
+                    } else {
+                        y.classList.remove('active');
+                    }
+                });
+            });
+        });
+
+        //render subscribers and subscriptions
+        let subscriptionObj;
+        let subscriberObj;
+        let subscriptionObjCount;
+        let subscriberObjCount;
+        let promiseArr = [actor.getSubscriptions(who.toString()), actor.getSubscribers(who.toString())]
+        await Promise.all(promiseArr).then((data) => {
+            subscriptionObj = data[0];
+            subscriberObj = data[1];
+            subscriptionObjCount = data[0].length;
+            subscriberObjCount = data[1].length;
+        });
+        console.log(subscriptionObj)
+        console.log(subscriberObj)
+        // выводим количество подписок и подписчиков в табы сверху 
+        let subscriptionsCount = document.querySelector('.mainWrapCommunity .tabPanel .tab[tab="1"] span');
+        let subscribersCount = document.querySelector('.mainWrapCommunity .tabPanel .tab[tab="2"] span');
+
+        subscriptionsCount.innerText = 'Subscriptions ' + subscriptionObj[0].length;
+        subscribersCount.innerText = 'Subscribers ' + subscriberObj[0].length;
+        // собираем массив обещаний на получение данных подписок
+        let subsPromises = [];
+        subscriptionObj[0].forEach((el) => {
+            subsPromises.push(actor.getUser(el));
+        });
+        //собираем массив обещаний на получение данных подписчиков
+        let subsPromises2 = [];
+        subscriberObj[0].forEach((el) => {
+            subsPromises2.push(actor.getUser(el));
+        });
+        // получаем данные наших подписок 
+        await Promise.all(subsPromises).then((data) => {
+            console.log(data);
+            let listWraps = document.querySelectorAll('.mainWrapCommunity .listWrap');
+            let listElement1 = document.createElement('div');
+            listElement1.classList.add('list');
+            for(let i = 0; i < data.length; i++) {
+                if (data[i].length !== 0) {
+                    console.log('ЗАШЛИ ВОТ НАШ АЙ')
+                    console.log(data[i])
+                    let item = `
+                    <div class="item active" principal="${data[i][0].id.toString()}">
+                        <div class="photo">
+                            <img src=${data[i][0].userData.mainPhoto} alt="">
+                        </div>
+                        <div class="name">
+                            <span>${data[i][0].userData.name}</span>
+                        </div>
+                        <div class="button">
+                            <button class="unsub">Unsubscribe</button>
+                        </div>
+                    </div>
+                    `;
+                    listElement1.innerHTML += item;
+                } else {
+                    // значит пользователя больше не существует мы его не вывели и должны уменьшить счетчик подписчиков на 1
+                }
+              
+            };
+            listWraps[0].appendChild(listElement1);
+        });
+        // получаем данные подписчиков
+        await Promise.all(subsPromises2).then((data) => {
+            console.log(data);
+            let listWraps = document.querySelectorAll('.mainWrapCommunity .listWrap');
+            let listElement1 = document.createElement('div');
+            listElement1.classList.add('list');
+            for(let i = 0; i < data.length; i++) {
+                if (data[i].length !== 0) {
+                    let item = `
+                    <div class="item subscriber active" principal="${data[i][0].id.toString()}">
+                        <div class="photo">
+                            <img src=${data[i][0].userData.mainPhoto} alt="">
+                        </div>
+                        <div class="name">
+                            <span>${data[i][0].userData.name}</span>
+                        </div>
+                        <div class="button">
+                        <button class="add active">Subscribe</button>
+                        <button class="remove">
+                            <img src="img/del_user.svg" alt="">
+                        </button>
+                    </div>
+                    </div>
+                    `;
+                    let itemWidthoutSubscribe = `
+                    <div class="item subscriber active" principal="${data[i][0].id.toString()}">
+                        <div class="photo">
+                            <img src=${data[i][0].userData.mainPhoto} alt="">
+                        </div>
+                        <div class="name">
+                            <span>${data[i][0].userData.name}</span>
+                        </div>
+                        <div class="button">
+                            <button class="add">Subscribe</button>
+                            <button class="remove">
+                                <img src="img/del_user.svg" alt="">
+                            </button>
+                        </div>
+                    </div>
+                    `;
+                    if (subscriptionObj[0].includes(data[i][0].id.toString())) {
+                        listElement1.innerHTML += itemWidthoutSubscribe;
+                    } else {
+                        listElement1.innerHTML += item;
+                    }
+                    
+                } else {
+                    // пользователь удалился
+                }
+        
+            };
+            listWraps[1].appendChild(listElement1);
+        });
+        // прослушка всех айтемов подписчиков и подписок 
+        // по клику переходим на профиль человека 
+        let allSubsitems = document.querySelectorAll('.mainWrapCommunity .listWrap .list .item');
+        allSubsitems.forEach((el) => {
+            el.addEventListener('click', function() {
+                let principalString = this.getAttribute('principal');
+                console.log(principalString)
+                openUserProfile(principalString, -1)
+            });
+        });
+        // прослушка кнопки отписаться у каждого айтема наших подписок 
+        let allUnsubbtns = document.querySelectorAll('.mainWrapCommunity .listWrap .list .item .button button.unsub');
+        allUnsubbtns.forEach((el) => {
+            el.addEventListener('click', async function(e) {
+                e.stopPropagation();
+                let opanentPrincipalString = this.parentElement.parentElement.getAttribute('principal');
+                let myPrincipalString = who.toString();
+                this.parentElement.parentElement.classList.remove('active');
+                let subscriptionObj = await actor.getSubscriptions(myPrincipalString);
+                let subscriberObj = await actor.getSubscribers(opanentPrincipalString);
+                // уменьшаем счетчик подписок на 1 
+                let subscriptionCount = document.querySelector('.mainWrapCommunity .tabPanel .tab[tab="1"] span');
+                subscriptionObjCount = subscriptionObjCount - 1; 
+                subscriptionCount.innerText = 'Subscriptions ' + subscriptionObjCount;
+
+                let freshArr = [];
+                subscriptionObj[0].forEach((el) => {
+                    if (el !== opanentPrincipalString) {
+                        freshArr.push(el);
+                    }
+                });
+                let res  = await actor.setSubscriptions(myPrincipalString, freshArr);
+                let freshArrOpanent = [];
+                subscriberObj[0].forEach((el) => {
+                    if (el !== myPrincipalString) {
+                        freshArr.push(el);
+                    }
+                });
+                let res2 = await actor.setSubscribers(opanentPrincipalString, freshArrOpanent);
+                // находим этого человека в отрендереных подписчиках и добавляем кнопку подписаться
+                let ourSubs = document.querySelectorAll('.mainWrapCommunity .listWrap .list .item.subscriber');
+                ourSubs.forEach((el) => {
+                    if (el.getAttribute('principal') == opanentPrincipalString) {
+                        let subscribeBtn = el.querySelector('button.add');
+                        subscribeBtn.classList.add('active');
+                    }
+                });
+            });
+        });
+        // прослушка кнопки подписаться у наших подписчиков 
+        let allSubsSubscribeBtns = document.querySelectorAll('.mainWrapCommunity .listWrap .list .item .button button.add');
+        allSubsSubscribeBtns.forEach((el) => {
+            el.addEventListener('click', async function(e) {
+                e.stopPropagation();
+                this.classList.remove('active');
+                let opanentPrincipalString = this.parentElement.parentElement.getAttribute('principal');
+                let myPrincipalString = who.toString();
+                console.log(opanentPrincipalString);
+                let subscriptionObj = await actor.getSubscriptions(myPrincipalString);
+                let subscriberObj = await actor.getSubscribers(opanentPrincipalString);
+                // проверяем имеется ли принципал опанента в массиве если нет то добавляем 
+                let boo = subscriptionObj[0].includes(opanentPrincipalString);
+                console.log(boo);
+                // проверяем имеется ли наш принципал у апонента в подписках если нет то добавляем
+                let boo2 = subscriberObj[0].includes(myPrincipalString);
+                if (boo == false && boo2 == false) {
+        
+                    console.log('не подписаны');
+                    subscriptionObj[0].push(opanentPrincipalString);
+                    let res  = await actor.setSubscriptions(myPrincipalString, subscriptionObj[0]);
+                    subscriberObj[0].push(myPrincipalString);
+                    let res2 = await actor.setSubscribers(opanentPrincipalString, subscriberObj[0]);
+                    this.classList.remove('block');
+                    console.log(res)
+                    console.log(res2)
+                    // находим этого юзера если он уже был у нас в отрендереном списке подписок
+                    // находим с списке все айтемы без класса эктив - то есть невидимых
+                    let allHiddenSubscribes = document.querySelectorAll('.mainWrapCommunity .tabItem[tab="1"] .listWrap .list .item');
+                    allHiddenSubscribes.forEach((el) => {
+                        let itemPrincipal = el.getAttribute('principal');
+                        if (itemPrincipal == opanentPrincipalString) {
+                            el.classList.add('active');
+                            // нашли айтем и отобразили его теперь нужно увеличить счетчик подписок на еденицу
+                            let subscriptionCount = document.querySelector('.mainWrapCommunity .tabPanel .tab[tab="1"] span');
+                            subscriptionObjCount = subscriptionObjCount + 1;
+                            subscriptionCount.innerText = 'Subscriptions ' + subscriptionObjCount;
+                        } else {
+                            // не нашли айтем нужно отрисовать с нуля и добавить в каунт еденицу 
+                            // добавляем в каунт еденицу 
+                            let subscriptionCount = document.querySelector('.mainWrapCommunity .tabPanel .tab[tab="1"] span');
+                            subscriptionObjCount = subscriptionObjCount + 1;
+                            subscriptionCount.innerText = 'Subscriptions ' + subscriptionObjCount;
+                            // отрисовываем свежую подписку к нам в спосок подписок 
+
+                        }
+                    });
+                } else {
+                    alert('you are following this user')
+                }
+            });
+        });
+        // прослушка кнопки крестика убрать из подписчиков 
+        let removeSubscriberbtn = document.querySelectorAll('.mainWrapCommunity .listWrap .list .item .button button.remove');
+        removeSubscriberbtn.forEach((el) => {
+            el.addEventListener('click', async function(e) {
+                e.stopPropagation();
+                this.parentElement.parentElement.classList.remove('active');
+                // уменьшаем счетчик подписок на 1 
+                subscriberObjCount = subscriberObjCount - 1;
+                let subscriptionCount = document.querySelector('.mainWrapCommunity .tabPanel .tab[tab="2"] span');
+                subscriptionCount.innerText = 'Subscribers ' + subscriberObjCount;
+
+                let opanentPrincipalString = this.parentElement.parentElement.getAttribute('principal');
+                let myPrincipalString = who.toString();
+                let subscriptionObj = await actor.getSubscriptions(opanentPrincipalString);
+                let subscriberObj = await actor.getSubscribers(myPrincipalString);
+                let freshArr = [];
+                subscriptionObj[0].forEach((el) => {
+                    if (el !== myPrincipalString) {
+                        freshArr.push(el);
+                    }
+                });
+                let res  = await actor.setSubscriptions(opanentPrincipalString, freshArr);
+                let freshArrOpanent = [];
+                subscriberObj[0].forEach((el) => {
+                    if (el !== opanentPrincipalString) {
+                        freshArr.push(el);
+                    }
+                });
+                let res2 = await actor.setSubscribers(myPrincipalString, freshArrOpanent);
+            });
+        });
+
+
+
+
+
+
+
+    }
+
+
+// прослушка кнопки смайликов 
+// event listener smile
+
+let smileBtn = document.querySelector('.smilebtn');
+smileBtn.addEventListener('click', function() {
+    let smileModal = document.querySelector('.smileModal');
+    smileModal.classList.add('active');
+});
+
+
+
+// block upload блокировка загрузки
+function blockUpload() {
+    let photoBoxDefault = document.querySelector('.photo_matrix .photoBox.default');
+    let createUserBtn = document.querySelector('.global_continue button.createUser');
+    photoBoxDefault.classList.add('block');
+    createUserBtn.classList.add('block');
+}
+
+function unBlockUpload() {
+    let photoBoxDefault = document.querySelector('.photo_matrix .photoBox.default');
+    let createUserBtn = document.querySelector('.global_continue button.createUser');
+    photoBoxDefault.classList.remove('block');
+    createUserBtn.classList.remove('block');
+}
+
+
+// находим все логотипы и даем прослушку на возврат к домашней странице
+let allDiamonds = document.querySelectorAll('img.diamond');
+allDiamonds.forEach((el) => {
+    el.addEventListener('click', function() {
+        let event = this.getAttribute('event');
+        let value = this.getAttribute('value');
+
+        if (event == "back") {
+            for(let i = 0; i < Number(value); i++) {
+                rollBack();
+            };
+        }
+    });
+});
+
