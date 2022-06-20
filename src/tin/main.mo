@@ -11,7 +11,7 @@ actor Tingram {
     type UserData = {
         name : ?Text;
         dateOfBirth : ?Text;
-        profilePhotosIds : [?Text];
+        profilePhotoIds : [?Text];
         profileVideoIds : [?Text];
         mainPhoto : ?Text;
         profileId : ?Text;
@@ -20,6 +20,8 @@ actor Tingram {
         interests : [?Text];
         conversations : [?Text];
         about : ?Text;
+        // posts : ?Text;
+        profilePostIds : [?Text];
     };
 
     type User = {
@@ -49,21 +51,95 @@ actor Tingram {
         text : ?Text;
     };
 
+    type Post = {
+        id : ?Text;
+        text : ?Text;
+        likes : ?Text;
+        comments : ?Text;
+        reposts : ?Text;
+        vid : ?Text;
+        opId : ?Text;
+        repOrigPostId: ?Text;
+    };
+
+    type Photo = {
+        id: ?Text;
+        likes: ?Text;
+        src: ?Text;
+    };
+
+    type BlogCom = {
+        text: ?Text;
+        userId: ?Text;
+    };
+
     stable var users : Trie.Trie<Principal, User> = Trie.empty();
     stable var chunks : Trie.Trie<VideoId, ChunkData> = Trie.empty();
     stable var messages : Trie.Trie<ConversationId, ConversationObject> = Trie.empty();
     stable var subscriptions : Trie.Trie<Text, [Text]> = Trie.empty();
     stable var subscribers : Trie.Trie<Text, [Text]> = Trie.empty();
-    stable var photos : Trie.Trie<Text, Text> = Trie.empty();
+    stable var photos : Trie.Trie<Text, Photo> = Trie.empty();
+    stable var posts : Trie.Trie<Text, Post> = Trie.empty();
+    stable var likes : Trie.Trie<Text, [Text]> = Trie.empty();
+    stable var blogComs : Trie.Trie<Text, BlogCom> = Trie.empty();
 
-    public func setPhoto(photoId : Text, base64 : Text) : async Text {
-        let (newPhoto, existing) = Trie.put(photos, keyText(photoId), Text.equal, base64);
-        photos := newPhoto;
-        let message : Text = "newPhotoUploaded";
+
+    public func setBlogCom(key: Text, val: BlogCom) : async Text {
+        let (newComObj, existing) = Trie.put(blogComs, keyText(key), Text.equal, val);
+        blogComs := newComObj;
+        let message : Text = "newComObj Created";
+        return message; 
+    };
+
+    public query func getBlogCom(key: Text) : async ?BlogCom {
+        let result = Trie.find(blogComs, keyText(key), Text.equal);
+        return result;
+    };
+
+    public func setLikesObj(key: Text, val: [Text]) : async Text {
+        let (newLikeObj, existing) = Trie.put(likes, keyText(key), Text.equal, val);
+        likes := newLikeObj;
+        let message : Text = "newLikesObj Created";
         return message;
     };
 
-    public query func getPhoto(photoId : Text) : async ?Text {
+    public query func getLikesObj(key: Text) : async ?[Text] {
+        let result = Trie.find(likes, keyText(key), Text.equal);
+        return result;
+    };
+
+    public func setPost(key : Text, val : Post) : async Text {
+        let (newPost, existing) = Trie.put(posts, keyText(key), Text.equal, val);
+        posts := newPost;
+        let message : Text = "newPost Created";
+        return message;
+    };
+
+    public query func getPost(key : Text) : async ?Post {
+        let result = Trie.find(posts, keyText(key), Text.equal);
+        return result;
+    };
+
+    public func deletePost(key : Text) : async Bool {
+
+        let result = Trie.find(posts, keyText(key), Text.equal);
+
+        switch (result) {
+            case null {return false};
+            case (? v) {posts := Trie.replace(posts, keyText(key), Text.equal, null).0};
+        };
+
+        return true;
+    };
+
+    public func setPhoto(photoId : Text, photoObj : Photo) : async Text {
+        let (newPhoto, existing) = Trie.put(photos, keyText(photoId), Text.equal, photoObj);
+        photos := newPhoto;
+        let message : Text = "Photos array updated";
+        return message;
+    };
+
+    public query func getPhoto(photoId : Text) : async ?Photo {
         let result = Trie.find(photos, keyText(photoId), Text.equal);
         return result;
     };

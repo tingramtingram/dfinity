@@ -1,22 +1,14 @@
 
 import { AuthClient } from "@dfinity/auth-client";
 import { Actor, HttpAgent } from "@dfinity/agent";
-// import { tin } from "../../declarations/tin";
+// import { ContextExclusionPlugin } from "webpack";
+import {os} from "os-browserify";
+// import { BncClient } from "@binance-chain/javascript-sdk"
 import { tin, canisterId, createActor } from "../../declarations/tin";
 import { setUncaughtExceptionCaptureCallback } from "process";
 
-// if ('serviceWorker' in navigator) {
-//     window.addEventListener('load', function() {  
-//       navigator.serviceWorker.register('sw.js').then(
-//         function(registration) {
-//           // Registration was successful
-//           console.log('ServiceWorker registration successful with scope: ', registration.scope); },
-//         function(err) {
-//           // registration failed :(
-//           console.log('ServiceWorker registration failed: ', err);
-//         });
-//     });
-//    }
+
+try {
 
 let preloader          = document.querySelector('.loader');
 let hi                 = document.querySelector('section.hi');
@@ -46,8 +38,27 @@ let ifProfile          = document.querySelectorAll('.ifProfile');
 let newAbout           = document.querySelector('.global_input input.about');
 let genderSpan         = document.querySelector('.ifProfile .chosen-value span');
 let genderLoginInput   = document.querySelector('.ifProfile .chosen-value');
-let filterByYears = document.querySelectorAll('.value-list.years li');
-let filterByGender = document.querySelectorAll('.value-list.gender li');
+let filterByYears      = document.querySelectorAll('.value-list.years li');
+let filterByGender     = document.querySelectorAll('.value-list.gender li');
+let settingsModal      = document.querySelector('.settings_modal');
+let logOutBtn          = settingsModal.querySelector('.logout');
+let deleteBtn          = settingsModal.querySelector('.delete');
+let communityButton    = document.querySelector('.profileBtn.community');
+let myWalletButton     = document.querySelector('.profileBtn.wallet');
+let deletePhotoBtns    = document.querySelectorAll('.photoModal .deletePhoto');
+let updateavatar       = document.querySelector('.updateAvatar');
+let addNewPhoto        = document.querySelector('.updateGallery');
+let uploadNewPhoto     = document.querySelector('button.uploadNewPhoto');
+let inputField         = document.querySelectorAll('.selectItem');
+let dropdowns          = document.querySelectorAll('.value-list');
+let smileModal         = document.querySelector('.smileModal');
+let tabChat            = document.querySelector('.tab.chat');
+let smileBtn           = document.querySelector('.smilebtn');
+let smiles             = document.querySelectorAll('.smileModal .item');
+let recomendMedia      = document.querySelector('.globalWrap .recomendationsWrap .mediaAndPosts .mediaWrap .items');
+
+
+
 
 
 
@@ -56,29 +67,22 @@ let actor;
 let identity;
 
 const init = async () => {
-
     preloaderOn();
     authClient = await AuthClient.create();
-
     if (await authClient.isAuthenticated()) {
-        handleAuthenticated(authClient);
-        
-        tabReadme.forEach((el) => {
-            el.remove();
-        });
+        handleAuthenticated(authClient, 'true');
+        tabReadme.forEach((el) => {el.remove()});
         console.log('пользователь залогинен')
     } else {
         preloaderOff();
         console.log('не залогинен')
     }
-    
-    
     variantDfinity.onclick = async () => {
         preloaderOn();
       await authClient.login({
         onSuccess: async () => {
             runRoll();
-          handleAuthenticated(authClient);
+          handleAuthenticated(authClient, 'false');
           preloaderOff();
           console.log('login succes');
         },
@@ -86,29 +90,100 @@ const init = async () => {
     };
   };
 
-  async function handleAuthenticated(authClient) {
-    
+  async function handleAuthenticated(authClient, status) {
     identity = await authClient.getIdentity();
-
     actor = createActor(canisterId, {
         agentOptions: {
           identity,
         },
       });
-
-      who = await actor.whoami();
-      console.log(who.toString());
-
+       if (status == 'true') {
+         who = identity._principal.toString()
+       } else {
+           let res = await actor.whoami();
+        who = res.toString();
+       }
       preloaderOff();
       getProfile(1, who);
     }
 init();
 let who;
 
+async function loadRecomendations() {
+    let res = await actor.allUsers();
+    log(res)
+    let usersObjects = [];
+    res.forEach((el) => {
+        usersObjects.push(el[1].userData);
+    });
+    log(usersObjects)
+    let photosIds = [];
+    let postsIds = [];
+    for(let i = 0; i < 50; i++) {
+        if (usersObjects[i] !== undefined && usersObjects[i] !== null) {
+            if (usersObjects[i].profileId[0] !== myMotokoObject.profileId[0]) {
+
+                usersObjects[i].profilePhotoIds.forEach((el) => {
+                    photosIds.push(el[0]);
+                });
+
+                log(usersObjects[i].posts)
+                
+                if (usersObjects[i].posts.length !== 0) {
+                    let postsCount = Number(usersObjects[i].posts[0]);
+                    let opanentId = usersObjects[i].profileId[0];
+                    log(postsCount)
+                    log(opanentId)
+                    if (postsCount == 1 || postsCount > 1) {
+                        postsIds.push(opanentId + '0', opanentId + '1');
+                    } else {
+                        postsIds.push(opanentId + '0');
+                    }
+                }
+                
+
+            }
+        }
+    }
+    log(photosIds);
+    log(postsIds);
+
+    // get photos and posts 
+    let photosPromise = [];
+    let blogsPromise = [];
+    photosIds.forEach((el) => {
+        photosPromise.push(actor.getPhoto(el));
+    });
+    postsIds.forEach((el) => {
+        blogsPromise.push(actor.getPost(el));
+    });
+
+    let resPhotos = await Promise.all(photosPromise).then((data) => {return data});
+    renderRecomendPhotos(resPhotos.reverse());
+    let resPosts  = await Promise.all(blogsPromise).then((data) => {return data});
+    log(resPhotos);
+    log(resPosts);
+
+    
+
+};
+
+function renderRecomendPhotos(resPhotos) {
+    console.log('work')
+    recomendMedia.innerHTML = "";
+    resPhotos.forEach((el) => {
+        let photoItem = `
+            <div class="item">
+                <img src="${el[0].src[0]}">
+            </div>
+        `;
+        recomendMedia.innerHTML += photoItem;
+    });
+
+};
 
 
-
-
+function log(log) {console.log(log)};
 
 function preloaderOn() {
     preloader.classList.add('loader--active');
@@ -119,12 +194,48 @@ function preloaderOff() {
 };
 
 
+// create account listener
+createUser.addEventListener('click', () => {createAccount()});
+// delete account listener
+deleteBtn.addEventListener('click',  () => {deleteAccount()});
+// button myCommunity listener
+communityButton.addEventListener('click', () => {
+    runRoll();runRoll();runRoll();runRoll();runRoll();
+    openCommunity();
+});
+// listen button myWallet
+myWalletButton.addEventListener('click', async function() {alert('Soon');});
+// listen delete photo in modal
+deletePhotoBtns.forEach((el) => {el.addEventListener('click', async function() {deletePhoto(this);});});
+// listen update avatar button
+updateavatar.addEventListener('change', function(event) {event.stopPropagation();let type = 'avatar';onFileAdded(event, type);});
+// listen add New Photo button
+addNewPhoto.addEventListener('change', function(event) {let type = 'newPhoto';onFileAdded(event, type);});
+// listen button upload new photo
+uploadNewPhoto.addEventListener('click', function(event) {uploadNewPhotoFunc(event, this)});
+// event listener smile
+smileBtn.addEventListener('click', function(e) {e.stopPropagation();smileModal.classList.add('active');});
+// при нажатии в области чата закрывать модалку с смайлами
+tabChat.addEventListener('click', () => {smileModal.classList.remove('active')});
+// пропагатион на модалке со смайлами
+smileModal.addEventListener('click', function(e) {
+    e.stopPropagation();
+});
+// прослушка каждого смайлика
+smiles.forEach((el) => {el.addEventListener('click', function() {let value = this.getAttribute('value');sendMes(value);smileModal.classList.remove('active');})});
+
+    
+
+
+
+
+
+
 
 gear.addEventListener('click', async function() {
     console.log('dali proslushku gear')
-    let settingsModal = document.querySelector('.settings_modal');
-    let logOutBtn = settingsModal.querySelector('.logout');
-    let deleteBtn = settingsModal.querySelector('.delete');
+
+    
     if (settingsModal.classList.contains('active')) {
         settingsModal.classList.remove('active');
     } else {
@@ -136,71 +247,72 @@ gear.addEventListener('click', async function() {
             location.reload();
         }
     });
-    deleteBtn.addEventListener('click', async function() {
-        preloaderOn();
-        messageForHeart('Delete your account');
-        // получаем список всех наших конвертаций
-        let myProf = await actor.read();
-        console.log('получили наш профиль')
-        console.log('получили массив с номерами наших бесед');
-        console.log(myProf[0].userData.conversations);
-        console.log('получили массив с номерами наших видео');
-        console.log(myProf[0].userData.profileVideoIds);
-        console.log('получили массив с номерами наших фото');
-        console.log(myProf[0].userData.profilePhotosIds);
-        // // собираем массив с обещаниями 
-        let promiseDeletePhotos = [];
-        myProf[0].userData.profilePhotosIds.forEach((el) => {
-            promiseDeletePhotos.push(actor.deletePhoto(el[0]))
-        });
-        let promiseDeleteConvers = [];
-        myProf[0].userData.conversations.forEach((el) => {
-            promiseDeleteConvers.push(actor.deleteConversation(el[0]));
-        });
-        let promiseDeleteVideoChunks = [];
-        myProf[0].userData.profileVideoIds.forEach((el) => {
-            console.log('VIDEO ID');
-            console.log(el[0]);
-            // так же пушим хэш превью к видео 
-            promiseDeleteVideoChunks.push(actor.deleteChunk(el[0] + String(99)));
-            // запускаем цикл сборки обещаний на удаления каждого чанка каждого видео
-            for(let i = 0; i < 12; i++) {
-                promiseDeleteVideoChunks.push(actor.deleteChunk(el[0] + String(i)));
-            };
-        });
-        let res = await actor.delete();
-        console.log('Удалили аккаунт')
 
-        await Promise.all(promiseDeleteConvers).then((data) => {
-            console.log(data);
-            console.log('удалили беседы')
-            preloaderOff();
-            // location.reload();
-        });
-        await Promise.all(promiseDeletePhotos).then((data) => {
-            console.log(data);
-            console.log('удалили все фото')
-            preloaderOff();
-        });
-        await Promise.all(promiseDeleteVideoChunks).then((data) => {
-            console.log(data);
-            console.log('удалили все чанки видео')
-            preloaderOff();
-            location.reload();
-        });
-
-
-
-        // удаляем все наши конвертации 
-        
-        // 
-        
-        // 
-    });
 
     // console.log(res);
     // location.reload();
 });
+
+
+
+async function deleteAccount() {
+    preloaderOn();
+    messageForHeart('Delete your account');
+    // получаем список всех наших конвертаций
+    let myProf = await actor.read();
+    console.log('получили наш профиль')
+    console.log('получили массив с номерами наших бесед');
+    console.log(myProf[0].userData.conversations);
+    console.log('получили массив с номерами наших видео');
+    console.log(myProf[0].userData.profileVideoIds);
+    // console.log('получили массив с номерами наших фото');
+    // console.log(myProf[0].userData.profilePhotosIds);
+    // // собираем массив с обещаниями 
+    // let promiseDeletePhotos = [];
+    // myProf[0].userData.profilePhotosIds.forEach((el) => {
+    //     promiseDeletePhotos.push(actor.deletePhoto(el[0]))
+    // });
+    let promiseDeleteConvers = [];
+    myProf[0].userData.conversations.forEach((el) => {
+        promiseDeleteConvers.push(actor.deleteConversation(el[0]));
+    });
+    let promiseDeleteVideoChunks = [];
+    myProf[0].userData.profileVideoIds.forEach((el) => {
+        console.log('VIDEO ID');
+        console.log(el[0]);
+        // так же пушим хэш превью к видео 
+        promiseDeleteVideoChunks.push(actor.deleteChunk(el[0] + String(99)));
+        // запускаем цикл сборки обещаний на удаления каждого чанка каждого видео
+        for(let i = 0; i < 12; i++) {
+            promiseDeleteVideoChunks.push(actor.deleteChunk(el[0] + String(i)));
+        };
+    });
+    let res = await actor.delete();
+    console.log('Удалили аккаунт')
+
+    await Promise.all(promiseDeleteConvers).then((data) => {
+        console.log(data);
+        console.log('удалили беседы')
+        preloaderOff();
+        // location.reload();
+    });
+    // await Promise.all(promiseDeletePhotos).then((data) => {
+    //     console.log(data);
+    //     console.log('удалили все фото')
+    //     preloaderOff();
+    // });
+    await Promise.all(promiseDeleteVideoChunks).then((data) => {
+        console.log(data);
+        console.log('удалили все чанки видео')
+        preloaderOff();
+        location.reload();
+    });
+};
+
+
+
+
+
 
 function messageForHeart(message) {
     let spanHeart = document.querySelector('.loader span');
@@ -208,28 +320,113 @@ function messageForHeart(message) {
 };
 
 let myPrincipal = '';
+let myMotokoObject = '';
+let myLikesObject = '';
 let myProfId = '';
 let myPhotoIds = '';
 let myPhoto = '';
 let myName = '';
 
+let lastViewedPrincipal;
+let lastViewedProfileObject;
 let lastViewedProfilePhoto;
 let lastViewedProfileName;
 
 
-// listen button myCommunity
-let communityButton = document.querySelector('.profileBtn.community');
-communityButton.addEventListener('click', function() {
-    runRoll();runRoll();runRoll();runRoll();runRoll();
-    openCommunity();
-    console.log('fdf')
+
+
+// listen inputs add New Media Files
+let addNewMediaInputs = document.querySelectorAll('.addPhotoModal input');
+addNewMediaInputs.forEach((el) => {
+    el.addEventListener('click', function(event) {
+        event.stopPropagation();
+    })
+});
+ 
+// listen button add photos 
+let uploadPhotosPlus = document.querySelector('.profilePhotoWrap .upload');
+uploadPhotosPlus.addEventListener('click', function(event) {
+    event.stopPropagation();
+    let addPhotoModal = document.querySelector('.addPhotoModal');
+    addPhotoModal.classList.add('active');
+    console.log(myMotokoObject)
+    // console.log(myMotokoObject.profilePhotosIds.length)
 });
 
-// listen button myWallet
-let myWalletButton = document.querySelector('.profileBtn.wallet');
-myWalletButton.addEventListener('click', function() {
-    alert('Soon')
+// listen close addNewPhotosModal 
+let newPhMo = document.querySelector('.addPhotoModal');
+newPhMo.addEventListener('click', function() {
+    newPhMo.classList.remove('active');
+    // возвращаем исходный вид окна загрузки новых фото и закрываем 
+    let ph = document.querySelector('.addPhotoModal .selects');
+    ph.innerHTML = "";
+    let allBtns = document.querySelectorAll('.addPhotoModal button');
+    allBtns.forEach((el) => {
+        el.classList.add('active');
+    });
+    let submBtn = document.querySelector('.addPhotoModal .uploadNewPhoto');
+    submBtn.classList.remove('active');
 });
+
+
+
+async function uploadNewPhotoFunc(event, element) {
+    event.stopPropagation();
+    let type = element.getAttribute('type');
+    let newPhotoEl = document.querySelector('.addPhotoModal .photoBox img');
+    if (type == 'avatar') {
+        myMotokoObject.mainPhoto = [newPhotoEl.src];
+        // сразу устанавливаем новый аватар 
+        let avatarPhoto = document.querySelector('.tab.profile .profile_information .left .photo_box > img'); 
+        avatarPhoto.src = newPhotoEl.src;
+        // возвращаем исходный вид окна загрузки новых фото и закрываем 
+        let ph = document.querySelector('.addPhotoModal .selects');
+        ph.innerHTML = "";
+        let allBtns = document.querySelectorAll('.addPhotoModal button');
+        allBtns.forEach((el) => {
+            el.classList.add('active');
+        });
+        let submBtn = document.querySelector('.addPhotoModal .uploadNewPhoto');
+        submBtn.classList.remove('active');
+        let addPhotoModal = document.querySelector('.addPhotoModal');
+        addPhotoModal.classList.remove('active');
+        let exportArr = await actor.updateUserData(myPrincipal, {userData: myMotokoObject});
+        log(exportArr)
+    } 
+    if (type == 'newPhoto') {
+        let profileId = myMotokoObject.profileId[0];
+        let freshPhotoIdsArr = myMotokoObject.profilePhotoIds;
+        let newPhotoNumber = profileId + makeid(16);
+        freshPhotoIdsArr.push([newPhotoNumber]);
+        myMotokoObject.profilePhotosIds = freshPhotoIdsArr;
+        // сразу добавляем новое фото в профиль
+        let profilePhotosWrap = document.querySelector('.selectPhotosWrap');
+        let child = '<div class="child"><img class="photoChildImg" principal="'+ myPrincipal +'" baseid="'+ newPhotoNumber +'" src="'+ newPhotoEl.src +'" alt=""></div>';
+        profilePhotosWrap.insertAdjacentHTML('afterBegin', child);
+        addEventListenersProfileVideos();
+        addEventListenersProfilePhotos();
+        clickAllProfileVideos();
+        // возвращаем исходный вид окна загрузки новых фото и закрываем 
+        let ph = document.querySelector('.addPhotoModal .selects');
+        ph.innerHTML = "";
+        let allBtns = document.querySelectorAll('.addPhotoModal button');
+        allBtns.forEach((el) => {
+            el.classList.add('active');
+        });
+        let submBtn = document.querySelector('.addPhotoModal .uploadNewPhoto');
+        submBtn.classList.remove('active');
+        let addPhotoModal = document.querySelector('.addPhotoModal');
+        addPhotoModal.classList.remove('active');
+
+        let result = await Promise.all([actor.updateUserData(myPrincipal, {userData: myMotokoObject}), actor.setPhoto(newPhotoNumber, { id: [newPhotoNumber], likes: ['0'], src: [newPhotoEl.src]})]).then((data) => {return data;})
+        log(result);
+    }
+};
+
+
+
+
+
 
 // listen button editProfile
 let profileEditButton = document.querySelector('.tab.profile .firs_logo .crown');
@@ -237,84 +434,187 @@ profileEditButton.addEventListener('click', function() {
     alert('soon')
 });
 
+// listen tabs in profile 
+let allChangeMiniRoll = document.querySelectorAll('.tab.profile .profile_tabs_photos .change');
+allChangeMiniRoll.forEach((el) => {
+    el.addEventListener('click', function() {
+        allChangeMiniRoll.forEach((x) => {
+            x.classList.remove('active');
+        });
+        if (this.classList.contains('photos')) {
+            miniRoll(1, 'profile')
+            this.classList.add('active');
+        }
+        if (this.classList.contains('blog')) {
+            miniRoll(2, 'profile')
+            this.classList.add('active');
+        }
+        if (this.classList.contains('info')) {
+            miniRoll(3, 'profile')
+            this.classList.add('active');
+        }
+    });
+})
+
+// listen tabs in user tab
+let allChangeMiniRollUserTab = document.querySelectorAll('.tab.user .profile_tabs_photos .change');
+allChangeMiniRollUserTab.forEach((el) => {
+    el.addEventListener('click', function() {
+        allChangeMiniRollUserTab.forEach((x) => {
+            x.classList.remove('active');
+        });
+        if (this.classList.contains('photos')) {
+            miniRoll(1, 'user')
+            this.classList.add('active');
+        }
+        if (this.classList.contains('blog')) {
+            miniRoll(2, 'user')
+            this.classList.add('active');
+        }
+        if (this.classList.contains('info')) {
+            miniRoll(3, 'user')
+            this.classList.add('active');
+        }
+    });
+})
+
+
+function miniRoll(state, tab) {
+    let miniRoll;
+    if (tab == 'user') {
+        miniRoll = document.querySelector('.tab.user .miniRoll');
+    }
+    if (tab == 'profile') {
+        miniRoll = document.querySelector('.tab.profile .miniRoll');
+    }
+    if (state == 1) {
+        miniRoll.style.transform = "translateX(375px)";
+    }
+    if (state == 2) {
+        miniRoll.style.transform = "translateX(0px)";
+    }
+    if (state == 3) {
+        miniRoll.style.transform = "translateX(-375px)";
+    }
+}
+
+
+
 
 async function getProfile(rollBacks, principal) {
+    let photoZone = document.querySelector('.tab.profile .selectPhotos .selectPhotosWrap');
+    photoZone.innerHTML = ""
+    
     preloaderOn();
     messageForHeart('Get your profile');
-    let res = await actor.read();
-    console.log('полученый профиль:');
+    myPrincipal = principal.toString();
+
+    let res;
+    let resLikes;
+
+    let resPromise = await Promise.all([actor.read(), actor.getLikesObj(myPrincipal)]).then((data) => {return data});
+
+    res = resPromise[0];
+    resLikes = resPromise[1];
+
+    myLikesObject = resLikes;
+    
+    console.log('Лайкнутые посты')
+    console.log(resLikes);
+
+    console.log('PROFILE')
     console.log(res)
+
+    preloaderOff();
+
+    // throw 'err'
+
+
+    
     if (res == null || res == "" || res == undefined) {
         console.log('Профиль не создан');
         preloaderOff();
     }
-
-
-    // RENDER PRINCIPAL 
-    // messageForHeart('Get your Principal Id');
-    // let principalString = principal.toString();
-    myPrincipal = principal.toString();
-    // let lastPrincipal = principalString.slice(-3);
-    // let firstPrincipal = principalString.substring(0, 5);
-    // let miniPrincipal = firstPrincipal + "..." + lastPrincipal;
-
+    
     if (res.length > 0) {
+
+        ifProfile.forEach((el) => {
+            el.remove();
+        });
+        if (rollBacks == 3) {
+            runRollBack();
+            runRollBack();
+            runRollBack();
+        }
+        if (rollBacks == 4) {
+            runRollBack();
+            runRollBack();
+            runRollBack();
+            runRollBack();
+        }
+
+        myMotokoObject = res[0].userData;
+
+
+        log('photos id list');
+        log(myMotokoObject.profilePhotoIds);
+
+
+        let promisePhotos = [];
+        myMotokoObject.profilePhotoIds.forEach((el) => {
+            promisePhotos.push(actor.getPhoto(el[0])); 
+        });
+        let profilePhotos = await Promise.all(promisePhotos).then((data) => {return data});
+        log('Ours photos');
+        log(profilePhotos);
+
         myProfId = res[0].userData.profileId;
-        myPhotoIds = res[0].userData.profilePhotosIds;
         myPhoto = res[0].userData.mainPhoto;
         myName = res[0].userData.name;
-        // let principalP = document.querySelector('.principal p');
-        // if (principal !== null) {
-        //     principalP.setAttribute('full', principalString);
-        //     principalP.innerHTML = miniPrincipal;
-        //     let principalItem = document.querySelector('.principal');
-        //     principalItem.addEventListener('click', function() {
-        //         let full = principalP.getAttribute('full');
-        //         console.log(full);
-        //         navigator.clipboard.writeText(full);
-        //     });
-            
-        // }
-        // END RENDER PRINCIPAL
-
+       
         paginationWrapper.remove();
         messageForHeart('Deploy your data on page');
         // RENDER NAME, BIRTH and PHOTOS 
         let name = document.querySelector('.name_age_box .name');
-        let dateOfBirth = document.querySelector('.name_age_box .age');
-        name.innerHTML = res[0].userData.name + ', ';
+        // let dateOfBirth = document.querySelector('.name_age_box .age');
+ 
+        name.innerHTML = res[0].userData.name;
         // Конвертируем дату в года и выводим в профиль
-        let dateNow = Date.parse(new Date());
-        let birthDate = Date.parse(res[0].userData.dateOfBirth);
-        let resultMs = dateNow - birthDate;
-        let resultAge = Math.floor(resultMs / (1000 * 60 * 60 * 24 * 30 * 12));
-        dateOfBirth.innerHTML = resultAge;
+        // let dateNow = Date.parse(new Date());
+        // let birthDate = Date.parse(res[0].userData.dateOfBirth);
+        // let resultMs = dateNow - birthDate;
+        // let resultAge = Math.floor(resultMs / (1000 * 60 * 60 * 24 * 30 * 12));
+        // dateOfBirth.innerHTML = resultAge;
         // конец вывода даты
         // составляем массив обещаний на получение фото профиля и получаем фото
-        let photoPromiseArr = [];
-        myPhotoIds.forEach((el) => {
-            photoPromiseArr.push(actor.getPhoto(el[0]));
-        });
+        // let photoPromiseArr = [];
+        // myPhotoIds.forEach((el) => {
+        //     photoPromiseArr.push(actor.getPhoto(el[0]));
+        // });
         
-        console.log('PHOTO IDS');
-        console.log(myPhotoIds);
-        let resultPhotos = await Promise.all(photoPromiseArr).then((data) => {
-            console.log('ПОЛУЧИЛИ ВСЕ НАШИ ФОТО');
-            console.log(data);
-            return data;
-        });
+        // console.log('PHOTO IDS');
+        // console.log(myPhotoIds);
+        // let resultPhotos = await Promise.all(photoPromiseArr).then((data) => {
+        //     console.log('ПОЛУЧИЛИ ВСЕ НАШИ ФОТО');
+        //     console.log(data);
+        //     return data.reverse();
+        // });
 
-        let profilePhotos = resultPhotos;
+        // let profilePhotos = resultPhotos;
         let profilePhotosWrap = document.querySelector('.selectPhotosWrap');
         let mainPhoto = document.querySelector('.left .photo_box img');
-        mainPhoto.src = profilePhotos[0][0];
-        profilePhotos.forEach((el, index) => {
-            let child = '<div class="child"><img class="photoChildImg" principal="'+ myPrincipal +'" baseid="'+ myPhotoIds[index][0] +'" src="'+ el[0] +'" alt=""></div>';
+        mainPhoto.src = myPhoto;
+        profilePhotos.reverse().forEach((el, index) => {
+            let child = '<div class="child"><img class="photoChildImg" principal="'+ myPrincipal +'" baseid="'+ el[0].id[0] +'" src="'+ el[0].src[0] +'" alt=""></div>';
             profilePhotosWrap.innerHTML += child;
         });
 
         // END RENDER NAME, BIRTH and PHOTOS 
-        messageForHeart('Get your video ids');
+               // убираем прелоадер с главного фото
+               let mainPh = document.querySelector('.tab.profile .profile_information .photo_box img');
+               let preEl = document.querySelector('.tab.profile .profile_information .photo_box .preElement');
+               mainPh.style.display = "block";
+               preEl.classList.remove('active');
 
         let getVideoIds = res[0].userData.profileVideoIds;
         //получаем превьюшки видео 
@@ -355,49 +655,618 @@ async function getProfile(rollBacks, principal) {
               
             </div>
             `;
-            // let videoItem = `
-            // <div class="child video" videoId="${getVideoIds[j]}" base64="">
-            //     <img src="img/play.jpg" alt="">
-            //     <div class="loading">
-            //         <div class="loading_line_wrapper">
-            //         <div class="loading_line">
-            //             <div class="loading_line_inner loading_line_inner--1"></div>
-            //             <div class="loading_line_inner loading_line_inner--2"></div>
-            //         </div>
-            //         </div>
-            //     </div>
-            // </div>
-            // `;
             profilePhotosWrap.innerHTML += videoItem;
         };
+        // рендерим плееры равное количеству наших видео 
+        let videoWrap = document.querySelector('.tab.profile .videoModalWrap');
+        videoWrap.innerHTML = '';
+        for(let j = 0; j < getVideoIds.length; j++) {
+            let item = `
+            <video id="video" preload="auto" width="370" videoId='${getVideoIds[j]}' controls>
+                <source src="">
+            </video>
+            `;
+            videoWrap.innerHTML += item;
+        };
+
+// получаем наши посты из блога 
+
+log(myMotokoObject.profilePostIds)
+if (myMotokoObject.profilePostIds.length !== 0) {
+
+    
+    let likesPostsArr = [];
+    if (myLikesObject.length !== 0) {
+        likesPostsArr = myLikesObject[0];
+    }
+
+
+    let promiseArr = [];
+    for(let i = 0; i < myMotokoObject.profilePostIds.length; i++) {
+        promiseArr.push(actor.getPost(myMotokoObject.profilePostIds[i][0]));
+    };
+    
+    let postsWrap = document.querySelector('.profileBlog .blogWrap .blogPosts');
+    postsWrap.innerHTML = "";
+
+    await Promise.all(promiseArr).then(async (data) => {
+        console.log(data)
+
+        for(let i = data.length - 1; i > -1; i--) {
+            if (data[i].length) {
+                let postItem;
+                if (data[i][0].vid.length !== 0) {
+                    let opRes = await actor.getUser(data[i][0].opId[0]);
+                    let origPosData = await actor.getPost(data[i][0].repOrigPostId[0]);
+                    log('EROOOR')
+                    log(opRes[0].userData.name);
+                    log(origPosData[0].text);
+                    postItem = `
+                    <div class="blogPost" itemId="${data[i][0].id[0]}" coms="${data[i][0].comments}" style="flex-direction: column; padding-bottom: 0;">
+                        <div class="remove">
+                            <img src="img/closed.svg">
+                        </div>
+                        <div class="wrap">
+                 
+                            <div class="info">
+                                <span style="color: rgb(65, 65, 65); font-weight: 400; font-size: 13px;">You reposted</span>
+                            </div>
+                        </div>
+
+                        <div class="repData" style="display: flex; margin-top: 6px;">
+                            <div class="photo">
+                                <img src="${opRes[0].userData.mainPhoto[0]}">
+                            </div>
+                            <div class="info">
+                                <span>${opRes[0].userData.name[0]}</span>
+                                <p>${origPosData[0].text[0]}<p/>
+                            </div">
+                        </div>
+                    </div>
+                `;
+                postsWrap.innerHTML += postItem
+                } else {
+                    
+                    if (likesPostsArr.includes(data[i][0].id[0])) {
+                        postItem = `
+                        <div class="blogPost" itemId="${data[i][0].id[0]}" coms="${data[i][0].comments}">
+                            <div class="remove">
+                                <img src="img/closed.svg">
+                            </div>
+                            <div class="photo">
+                                <img src="${myMotokoObject.mainPhoto}" alt="">
+                            </div>
+                            <div class="info">
+                                <span>${myMotokoObject.name}</span>
+                                <p>${data[i][0].text}</p>
+                                <div class="social">
+             
+                                    <div class="likes">
+                                        <img class="active" itemId="${data[i][0].id[0]}" src="img/like.svg" alt="">
+                                        
+                                        <span>${data[i][0].likes}</span>
+                                        
+                                    </div>
+                                    <div class="comments" itemId="${data[i][0].id[0]}" coms="${data[i][0].comments}">
+                                        <img src="img/comment.svg" alt="">
+                                        <span>${data[i][0].comments}</span>
+                                    </div>
+                                    <div class="reposts">
+                                        <img src="img/reposts.svg" alt="">
+                                        <span>${data[i][0].reposts}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    } else {
+                        postItem = `
+                        <div class="blogPost" itemId="${data[i][0].id[0]}" coms="${data[i][0].comments}">
+                            <div class="remove">
+                                <img src="img/closed.svg">
+                            </div>
+                            <div class="photo">
+                                <img src="${myMotokoObject.mainPhoto}" alt="">
+                            </div>
+                            <div class="info">
+                                <span>${myMotokoObject.name}</span>
+                                <p>${data[i][0].text}</p>
+                                <div class="social">
+         
+                                    <div class="likes">
+                                        <img itemId="${data[i][0].id[0]}" src="img/like.svg" alt="">
+                                        
+                                        <span>${data[i][0].likes}</span>
+                                        
+                                    </div>
+                                    <div class="comments" itemId="${data[i][0].id[0]}" coms="${data[i][0].comments}">
+                                        <img src="img/comment.svg" alt="">
+                                        <span>${data[i][0].comments}</span>
+                                    </div>
+                                    <div class="reposts">
+                                        <img src="img/reposts.svg" alt="">
+                                        <span>${data[i][0].reposts}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    }
+                    postsWrap.innerHTML += postItem
+                }
+                
+                
+            }
+            
+
+            
+
+            
+        };
+
+        // listen remove
+        let removes = document.querySelectorAll(".profileBlog .blogWrap .blogPosts .blogPost .remove"); 
+
+        removes.forEach((el) => {
+            el.addEventListener('click', function() {
+                removePost(this);
+            });
+        });
+
+        // listen likes 
+        let likes = document.querySelectorAll(".profileBlog .blogWrap .blogPosts .blogPost .info .social .likes img");
+        
+        likes.forEach((el) => {
+            el.addEventListener('click', function() {
+                setLike(this);
+            });
+        });
+
+        // listen comments 
+        let commentsBtn = document.querySelectorAll('.profileBlog .blogWrap .blogPosts .blogPost .info .social .comments');
+        commentsBtn.forEach((el) => {
+            el.addEventListener('click', function() {
+                let blogId = this.getAttribute('itemid');
+                let comsCount = this.getAttribute('coms');
+                openCommentsModal(this, null, blogId, comsCount);
+            });
+        });
+
+
+        // listen reposts
+        // let repostsBtn = document.querySelectorAll('.profileBlog .blogWrap .blogPosts .blogPost .info .social .reposts');
+        // repostsBtn.forEach((el) => {
+        //     el.addEventListener('click', function() {
+        //         // let blogId = this.getAttribute('itemid');
+        //         // let comsCount = this.getAttribute('coms');
+        //         repostQuery(this);
+        //     });
+        // });
+
+   
+    });
+}
+
         addEventListenersProfileVideos();
         addEventListenersProfilePhotos();
         clickAllProfileVideos();
 
-        preloaderOff();
-
-
-        ifProfile.forEach((el) => {
-            el.remove();
-        });
-        if (rollBacks == 3) {
-            runRollBack();
-            runRollBack();
-            runRollBack();
-        }
-        if (rollBacks == 4) {
-            runRollBack();
-            runRollBack();
-            runRollBack();
-            runRollBack();
-        }
-        if (rollBacks == 1) {
-
-        }
-
-
+        
 
     };
+
+};
+
+// listen user sure modal
+
+let sureRepostModal = document.querySelector('.tab.user .sureRepost');
+let sureRepostCloseModal = document.querySelector('.tab.user .sureRepost .remove');
+let sureRepostNoBtn = document.querySelector('.tab.user .sureRepost button.no');
+let sureRepostYesBtn = document.querySelector('.tab.user .sureRepost button.yes');
+
+sureRepostCloseModal.addEventListener('click', function() {
+    sureRepostModal.classList.remove('active');
+});
+
+sureRepostNoBtn.addEventListener('click', function() {
+    sureRepostModal.classList.remove('active');
+});
+
+sureRepostYesBtn.addEventListener('click', async function() {
+    log('REPOST')
+    sureRepostModal.classList.remove('active');
+    let postId = this.getAttribute('blogid');
+    let opPrinc = this.getAttribute('princ');
+
+    // получаем пост опанента по id 
+    let post = await actor.getPost(postId);
+    log(post)
+
+    let repostsCount = Number(post[0].reposts[0]);
+    repostsCount += 1;
+    post[0].reposts = [String(repostsCount)];
+
+    let userPrincipal = opPrinc;
+    let originalPostId = post[0].id[0];
+    let text = post[0].text[0];
+
+    console.log(userPrincipal)
+    console.log(originalPostId)
+    console.log(text)
+
+    // отправляем новый пост к себе 
+    let myPostId = makeid(32);
+
+    
+    
+    myMotokoObject.profilePostIds.push([myPostId]);
+    let ress = await Promise.all([actor.setPost(myPostId, {id: [myPostId], text: [text], likes: ['0'], comments: ['0'], reposts: ['0'], vid : ['repost'], opId : [userPrincipal], repOrigPostId: [originalPostId]}),actor.updateUserData(myPrincipal, {userData: myMotokoObject}),actor.setPost(originalPostId, post[0])]).then((data) => {return data})
+    // let result = await ;
+    // let profRes = await ;
+    // let addRepostToPost = await ;
+    log(ress)
+    
+    
+    // console.log(id)
+    //     let res = await actor.deletePost(id);
+    //     console.log(res);
+    
+    //     let fresh = myMotokoObject.profilePostIds;
+    //     let clear = [];
+    //     for(let i = 0; i < fresh.length; i++) {
+    //         if (fresh[i][0] !== id) {
+    //             clear.push([fresh[i][0]])
+    //         }
+    //     };
+    //     myMotokoObject.profilePostIds = clear
+    //     let res2 = await actor.updateUserData(myPrincipal, {userData: myMotokoObject})
+    //     console.log(res2)
+    
+    
+});
+
+
+// listen profile removePost item 
+let profileBlogModal = document.querySelector('.profileBlog .sure');
+let profileCloseModal = document.querySelector('.profileBlog .sure .remove');
+let profileNoBtn = document.querySelector('.profileBlog .sure .btns button.no');
+let profileYesBtn = document.querySelector('.profileBlog .sure .btns button.yes');
+
+profileCloseModal.addEventListener('click', function() {
+    profileBlogModal.classList.remove('active');
+});
+
+profileNoBtn.addEventListener('click', function() {
+    profileBlogModal.classList.remove('active');
+});
+
+profileYesBtn.addEventListener('click', async function() {
+    let id = this.getAttribute('itemId');
+
+    let pagePost = document.querySelector('.profileBlog .blogWrap .blogPosts .blogPost[itemid="' + id + '"]');
+    pagePost.remove();
+    profileBlogModal.classList.remove('active');
+
+    console.log(id)
+        
+    
+        let fresh = myMotokoObject.profilePostIds;
+        let clear = [];
+        for(let i = 0; i < fresh.length; i++) {
+            if (fresh[i][0] !== id) {
+                clear.push([fresh[i][0]])
+            }
+        };
+        myMotokoObject.profilePostIds = clear
+        let ress = await Promise.all([actor.deletePost(id), actor.updateUserData(myPrincipal, {userData: myMotokoObject})]);
+        // let res = await actor.deletePost(id);
+        // console.log(res);
+        // let res2 = await actor.updateUserData(myPrincipal, {userData: myMotokoObject})
+        // console.log(res2)
+        console.log(ress)
+    
+    
+});
+
+
+// listen commentsModal textAreas
+// let commentsModalTextAreas = document.querySelectorAll('.commentsModal textArea input');
+let commentsModalSendComment = document.querySelectorAll('.commentsModal .textArea .sen');
+commentsModalSendComment.forEach((el) => {
+    el.addEventListener('click', function() {
+        let text = this.previousSibling.value;
+        log(text);
+        if (text !== "") {
+            this.previousSibling.value = "";
+            this.previousSibling.classList.add('block');
+            sendComment(this.parentElement.parentElement, text, this.previousSibling);
+        }
+    });
+});
+
+
+async function sendComment(modal, text, inputEl) {
+    let postId = modal.getAttribute('itemId');
+    let coms = modal.getAttribute('coms');
+    let newComId = Number(coms) + 1;
+    let newComKey = postId + String(newComId);
+
+
+// add fake 
+
+let photo = myMotokoObject.mainPhoto;
+let name = myMotokoObject.name;
+
+let commentsArea = modal.querySelector('.comments');
+let item = `
+    <div class="userComment">
+        <div class="photo">
+            <img src="${photo}" alt="">
+        </div>
+        <div class="info">
+            <span>${name}</span>
+            <p>${text}</p>
+        </div>
+    </div>
+`;
+commentsArea.innerHTML += item;
+
+    // let res = await actor.setBlogCom(newComKey, {text: text});
+    let res3 = await actor.getPost(postId);
+    
+    let postValue = res3[0];
+    postValue.comments = [String(newComId)];
+
+
+
+    let res = await Promise.all([actor.setBlogCom(newComKey, {text: [text], userId: [myPrincipal]}), actor.setPost(postId, postValue)]).then((data) => {return data});
+
+    inputEl.classList.remove('block');
+    log(res)
+    
+};
+
+// listen post Comments modal 
+let commentModal = document.querySelector('.commentsModal')
+let commentsModalClose = document.querySelector('.commentsModal .close');
+commentsModalClose.addEventListener('click', function() {
+    commentModal.classList.remove('active');
+});
+
+let commentModalUser = document.querySelector('.tab.user .commentsModal')
+let commentsModalCloseUser = document.querySelector('.tab.user .commentsModal .close');
+commentsModalCloseUser.addEventListener('click', function() {
+    commentModalUser.classList.remove('active');
+});
+
+async function openCommentsModal(element, mod, itemId, countComs) {
+    if (mod == 'user') {
+        let modal = document.querySelector('.tab.user .commentsModal');
+        modal.setAttribute('itemId', itemId);
+        modal.setAttribute('coms', countComs);
+        modal.classList.add('active');
+
+        // log('pp')
+        // log(element.parentElement.parentElement.parentElement)
+        let plogPost = element.parentElement.parentElement.parentElement;
+        
+        let img = plogPost.querySelector('.photo img');
+        let name = plogPost.querySelector('.info span');
+        let text = plogPost.querySelector('.info p');
+    
+        let imgModal = document.querySelector('.tab.user .commentsModal .blogPost .photo img');
+        let nameModal = document.querySelector('.tab.user .commentsModal .blogPost .info span');
+        let textModal = document.querySelector('.tab.user .commentsModal .blogPost .info p');
+    
+        imgModal.src = img.src;
+        nameModal.innerHTML = name.textContent;
+        textModal.innerHTML = text.textContent;
+
+        // load comments 
+        // получаем все ключи комментариев 
+        let comKeys = [];
+        for(let i = 1; i < Number(countComs) + 1; i++) {
+            comKeys.push(actor.getBlogCom(itemId + String(i)));
+        };
+        log('PZ')
+        log(comKeys)
+        let rese = await Promise.all(comKeys).then((data) => {return data});
+        console.log(rese)
+        let usersDataPromises = [];
+        for(let i = 0; i < rese.length; i++) {
+            usersDataPromises.push(actor.getUser(rese[i][0].userId[0]));
+        };
+        let per = await Promise.all(usersDataPromises).then((data) => {return data});
+        log(per)
+
+        let commentsArea = modal.querySelector('.comments');
+        commentsArea.innerHTML = "";
+        for(let i = 0; i < rese.length; i++) {
+            let item = `
+                <div class="userComment">
+                    <div class="photo">
+                        <img src="${per[i][0].userData.mainPhoto}" alt="">
+                    </div>
+                    <div class="info">
+                        <span>${per[i][0].userData.name}</span>
+                        <p>${rese[i][0].text}</p>
+                    </div>
+                </div>
+            `;
+            commentsArea.innerHTML += item;
+        };
+
+    } else {
+        let modal = document.querySelector('.commentsModal');
+        modal.setAttribute('itemId', itemId);
+        modal.setAttribute('coms', countComs);
+        modal.classList.add('active');
+        // log('pp')
+        // log(element.parentElement.parentElement.parentElement)
+        let plogPost = element.parentElement.parentElement.parentElement;
+        
+        let img = plogPost.querySelector('.photo img');
+        let name = plogPost.querySelector('.info span');
+        let text = plogPost.querySelector('.info p');
+    
+        let imgModal = document.querySelector('.commentsModal .blogPost .photo img');
+        let nameModal = document.querySelector('.commentsModal .blogPost .info span');
+        let textModal = document.querySelector('.commentsModal .blogPost .info p');
+    
+        imgModal.src = img.src;
+        nameModal.innerHTML = name.textContent;
+        textModal.innerHTML = text.textContent;
+
+        // load comments 
+        // получаем все ключи комментариев 
+        let comKeys = [];
+        for(let i = 1; i < Number(countComs) + 1; i++) {
+            comKeys.push(actor.getBlogCom(itemId + String(i)));
+        };
+        log('PZ')
+        log(comKeys)
+        let rese = await Promise.all(comKeys).then((data) => {return data});
+        console.log(rese)
+        let usersDataPromises = [];
+        for(let i = 0; i < rese.length; i++) {
+            usersDataPromises.push(actor.getUser(rese[i][0].userId[0]));
+        };
+        let per = await Promise.all(usersDataPromises).then((data) => {return data});
+        log(per)
+
+        let commentsArea = modal.querySelector('.comments');
+        commentsArea.innerHTML = "";
+        for(let i = 0; i < rese.length; i++) {
+            let item = `
+                <div class="userComment">
+                    <div class="photo">
+                        <img src="${per[i][0].userData.mainPhoto}" alt="">
+                    </div>
+                    <div class="info">
+                        <span>${per[i][0].userData.name}</span>
+                        <p>${rese[i][0].text}</p>
+                    </div>
+                </div>
+            `;
+            commentsArea.innerHTML += item;
+        };
+
+
+ 
+    }
+
+
+ 
+
+};
+
+async function removePost(element) {
+    let modalSure = document.querySelector('.profileBlog .sure');
+    modalSure.classList.add('active');
+    let el = element.parentElement;
+    let postId = el.getAttribute('itemId');
+    log(postId);
+    profileYesBtn.setAttribute('itemId', postId);
+
+};
+
+async function repostQuery(el, princ, blogId) {
+    // проверяем есть ли айдишник поста уже в наших репостах 
+    // получаем все наши айди постов
+
+    // let myProfilePostsIds = myMotokoObject.profilePostIds;
+    // for(let i = 0; i < myProfilePostsIds.length; i++) {
+    //     if (myProfilePostsIds[i][0] == myProfilePostsIds)
+    // };
+
+    let modalSure = document.querySelector('.sureRepost');
+    modalSure.classList.add('active');
+    sureRepostYesBtn.setAttribute('blogId', blogId);
+    sureRepostYesBtn.setAttribute('princ', princ);
+};
+
+async function setLike(element) {
+    element.classList.add('block');
+    console.log('прожали лайк')
+    let itemId = element.getAttribute('itemId');
+    if (element.classList.contains('active')) {
+        // имеет наш лайк
+        // даем цвет сердечку
+        element.classList.remove('active');
+        // уменьшаем счетчик -1 
+        let countEl = element.parentElement.querySelector('span');
+        let count = Number(countEl.textContent);
+        count -= 1;
+        countEl.textContent = count;
+        // записываем в пост -1
+            // получаем объект поста 
+            let resPost = await actor.getPost(itemId);
+            console.log(resPost[0]);
+            let postObj = resPost[0];
+            let likesCount = Number(postObj.likes[0]);
+            likesCount -= 1;
+            postObj.likes = [String(likesCount)];
+            console.log(likesCount)
+
+        // убираем из личного объекта лайков номер поста 
+        let resMyLikesArr = myLikesObject;
+        console.log(resMyLikesArr);
+        
+        // объект лайков существует, теперь просто запишем новый номер поста в объект
+        resMyLikesArr[0].forEach((el, ind) => {
+            if (el == itemId) {
+                resMyLikesArr[0].splice(ind, 1);
+            }
+        });
+        // записываем данные поста
+        // записываем данные объекта наших лайков
+        let res = await Promise.all([actor.setPost(itemId, postObj), actor.setLikesObj(myPrincipal, resMyLikesArr[0])]).then((data) => {
+            element.classList.remove('block');
+            return data});
+        console.log(res);
+    } else {
+        // не имеет нашего лайка
+        element.classList.add('active');
+        // увеличиваем счетчик +1
+        let countEl = element.parentElement.querySelector('span');
+        let count = Number(countEl.textContent);
+        count += 1;
+        countEl.textContent = count;
+        // записываем в пост +1
+            // получаем объект поста 
+            let resPost = await actor.getPost(itemId);
+            console.log(resPost[0]);
+            let postObj = resPost[0];
+            let likesCount = Number(postObj.likes[0]);
+            likesCount += 1;
+            postObj.likes = [String(likesCount)];
+            console.log(likesCount)
+
+        // кладем в личный объект лайков номер поста 
+            let resMyLikesArr = myLikesObject;
+            log('MOI LAIKI')
+            console.log(resMyLikesArr);
+            if (resMyLikesArr.length == 0) {
+                // это наш первый лайк
+                let likesObj = [itemId];
+                // записываем данные поста
+                // записываем данные объекта наших лайков
+                let res = await Promise.all([actor.setPost(itemId, postObj), actor.setLikesObj(myPrincipal, likesObj)]).then((data) => {
+                    element.classList.remove('block');
+                    return data});
+                console.log(res);
+            } else {
+                // объект лайков существует, теперь просто запишем новый номер поста в объект
+                resMyLikesArr[0].push(itemId);
+                // записываем данные поста
+                // записываем данные объекта наших лайков
+                let res = await Promise.all([actor.setPost(itemId, postObj), actor.setLikesObj(myPrincipal, resMyLikesArr[0])]).then((data) => {
+                    element.classList.remove('block');
+                    return data});
+                console.log(res);
+            }
+
+    }
 };
 
 function clickAllProfileVideos() {
@@ -423,12 +1292,14 @@ function clickAllUserVideos() {
 function addEventListenersProfileVideos() {
     let allVideoItems = document.querySelectorAll('.tab.profile .selectPhotosWrap .child.video');
     if (allVideoItems) {
+
         allVideoItems.forEach((el) => {
             el.addEventListener('click', function() {
+                let videoId = String(this.getAttribute('videoid'));
                 if (this.getAttribute('base64') == "") {
                     console.log('видео не загружено');
                     // начинаем загрузку видео 
-                    let videoId = String(this.getAttribute('videoid'));
+                    
                     let state = this.getAttribute('state');
                     console.log(state);
                     if (state == null) {
@@ -437,33 +1308,15 @@ function addEventListenersProfileVideos() {
                         let loader = this.querySelector('.loader-element');
                         getFullVideoBase64(videoId, this, loader);
                     }
-                    if (state == '1') {
-                        // let loader = this.querySelector('.loader-element');
-                        if (this.getAttribute('base64') == "") {
-                            // loader.classList.add('active');
-                            // добавляем лоадер видео еще не загружено
-                        } else {
-                            let videoModal = document.querySelector('.tab.profile .videoModal');
-                            let video = document.querySelector('.tab.profile .videoModal video');
-                            videoModal.classList.add('active');
-                            video.src = this.getAttribute('base64');
-                            video.play();
-                        }
-                    }
-                    // let loadingItem = this.querySelector('.loading');
-                    // loadingItem.classList.add('active');
-                    // getFullVideoBase64(videoId, this, loadingItem);
+        
                 } else {
-                    let base64code = this.getAttribute('base64');
-                    let videoHtmlItem = `
-                    <video id="video" width="370" controls>
-                        <source src="${base64code}">
-                    </video>
-                    `;
+        
                     let videoModal = document.querySelector('.videoModal');
-                    let videoModalWrap = document.querySelector('.videoModal .videoModalWrap');
-                    videoModalWrap.innerHTML = videoHtmlItem;
+                    let video = document.querySelector('video[videoid="'+ videoId +'"]');
                     videoModal.classList.add('active');
+                    video.classList.add('active');
+                    
+                    
                 }
     
             });
@@ -474,8 +1327,8 @@ function addEventListenersProfileVideos() {
      let closeVideo = document.querySelector('.tab.profile .videoModal > img');
      if (closeVideo) {
          closeVideo.addEventListener('click', function() {
-             let videoTag = document.querySelector('.tab.profile .videoModalWrap video');
-             videoTag.remove();
+             let videoTag = document.querySelector('.tab.profile .videoModalWrap video.active');
+             videoTag.classList.remove('active');
              if (videoModalWindow.classList.contains('active')) {
                  videoModalWindow.classList.remove('active');
              }
@@ -487,12 +1340,15 @@ function addEventListenersProfileVideos() {
 function addEventListenersUserVideos() {
     let allVideoItems = document.querySelectorAll('.tab.user .selectPhotosWrap .child.video');
     if (allVideoItems) {
+
         allVideoItems.forEach((el) => {
             el.addEventListener('click', function() {
+                let videoId = String(this.getAttribute('videoid'));
+                console.log('projali')
                 if (this.getAttribute('base64') == "") {
                     console.log('видео не загружено');
                     // начинаем загрузку видео 
-                    let videoId = String(this.getAttribute('videoid'));
+                    
                     let state = this.getAttribute('state');
                     console.log(state);
                     if (state == null) {
@@ -501,33 +1357,15 @@ function addEventListenersUserVideos() {
                         let loader = this.querySelector('.loader-element');
                         getFullVideoBase64(videoId, this, loader);
                     }
-                    if (state == '1') {
-                        // let loader = this.querySelector('.loader-element');
-                        if (this.getAttribute('base64') == "") {
-                            // loader.classList.add('active');
-                            // добавляем лоадер видео еще не загружено
-                        } else {
-                            let videoModal = document.querySelector('.tab.user .videoModal');
-                            let video = document.querySelector('.tab.user .videoModal video');
-                            videoModal.classList.add('active');
-                            video.src = this.getAttribute('base64');
-                            video.play();
-                        }
-                    }
-                    // let loadingItem = this.querySelector('.loading');
-                    // loadingItem.classList.add('active');
-                    // getFullVideoBase64(videoId, this, loadingItem);
+        
                 } else {
-                    let base64code = this.getAttribute('base64');
-                    let videoHtmlItem = `
-                    <video id="video" width="370" controls>
-                        <source src="${base64code}">
-                    </video>
-                    `;
+        
                     let videoModal = document.querySelector('.tab.user .videoModal');
-                    let videoModalWrap = document.querySelector('.tab.user .videoModal .videoModalWrap');
-                    videoModalWrap.innerHTML = videoHtmlItem;
+                    let video = document.querySelector('video[videoid="'+ videoId +'"]');
                     videoModal.classList.add('active');
+                    video.classList.add('active');
+                    
+                    
                 }
     
             });
@@ -538,8 +1376,8 @@ function addEventListenersUserVideos() {
     let closeVideo = document.querySelector('.tab.user .videoModal > img');
     if (closeVideo) {
         closeVideo.addEventListener('click', function() {
-            let videoTag = document.querySelector('.tab.user .videoModalWrap video');
-            videoTag.remove();
+            let videoTag = document.querySelector('.tab.user .videoModalWrap video.active');
+            videoTag.classList.remove('active');
             if (videoModalWindow.classList.contains('active')) {
                 videoModalWindow.classList.remove('active');
             }
@@ -549,32 +1387,7 @@ function addEventListenersUserVideos() {
 
 };
 
-// кнопка удаления фото в модалке 
-let deletePhotoBtns = document.querySelectorAll('.photoModal .deletePhoto');
-deletePhotoBtns.forEach((el) => {
-    el.addEventListener('click', async function() {
-        let baseid = this.parentElement.getAttribute('baseid');
-        let userPrincipal = this.parentElement.getAttribute('principal');
-        let userProf = await actor.getUser(userPrincipal);
-        console.log('получили профиль юзера')
-        let userProfile = userProf[0].userData;
-        // перебираем id фотографий профиля и удаляем id удаляемого фото
-        
-        userProfile.profilePhotosIds.forEach((el, ind) => {
-            if (el[0] == baseid) {
-                userProfile.profilePhotosIds.splice(ind, 1);
-            }
-        });
-        let resultObj = {
-            userData : userProfile
-        }
 
-        actor.updateUserData(userPrincipal, resultObj);
-
-        let res = await actor.deletePhoto(baseid);
-        console.log(res); 
-    });
-});
 
 function addEventListenersProfilePhotos() {
     // gallery img popup 
@@ -649,6 +1462,18 @@ async function getFullVideoBase64(stringVideoId, videoItem, preloader) {
         console.log(typeof data);
         let base64code = data.join('');
         videoItem.setAttribute('base64', base64code);
+        // находим плеер этого id и даем ему этот срц
+        let thisVideoPlayer = document.querySelector('.videoModalWrap video[videoid="'+ stringVideoId +'"]');
+        thisVideoPlayer.setAttribute('soursee', 'done');
+        let videoTag = thisVideoPlayer.querySelector('source');
+        videoTag.src = base64code;
+        thisVideoPlayer.load();
+        // thisVideoPlayer.play();
+        // setTimeout(() => {
+        //     thisVideoPlayer.pause();
+        // }, 1000);
+
+
         // let videoHtmlItem = `
         // <video id="video" width="370" controls>
         //     <source src="${base64code}">
@@ -680,39 +1505,40 @@ function makeid(count) {
   
 
 let videoIds = [];
-createUser.addEventListener('click', async function() {
+
+async function createAccount() {
     let photos = document.querySelectorAll('.selectPhotos .photoBox.img img');
-    
-    console.log('НИЖЕ ФОТО ЭЛЕМЕНТЫ')
-    console.log(photos)
+    log('Photo elements');
+    log(photos);
 
-    if (photos.length == 0) {
-        alert('You need to upload at least one photo!');
-    } else {
+    if (photos.length == 0) {alert('You need to upload at least one photo!')} else {
         preloaderOn();
-        let genderElement = document.querySelector('.ifProfile .chosen-value span.active')
-
+        let genderElement = document.querySelector('.ifProfile .chosen-value span.active');
         let name = newName.value;
-        let gender = '';
-        if (genderElement) {gender = genderElement.textContent;}
-        console.log(newBirthDate.value)
-        // validate bithDate
-        let birthValues = newBirthDate.value.split('-');
         let birthDate = newBirthDate.value;
-
-        
+        let about = newAbout.value;
+        let gender = '';
+        if (genderElement) {gender = genderElement.textContent};
         
         let profileId = makeid(16);
         let mainThings = [];
         let interests = [];
         let conversations = [];
-        let about = newAbout.value;
+        
 
-        // готовим id для наших фото [айди юзера + номер]
         let photosIdsArray = [];
+        let photosObj = [];
         for (let i = 0; i < photos.length; i++) {
-            photosIdsArray.push([profileId + String(i)]);
+            let photoId = profileId + makeid(16);
+            photosIdsArray.push([photoId]);
+            photosObj.push(actor.setPhoto(photoId, {
+                id: [photoId],
+                likes: ['0'],
+                src: [photos[i].src]
+            }));
         };
+
+
         
         let mainThingsActiveElements = document.querySelectorAll('.loginInterestsWrap .loginInterests .interest .tagArea span.mainThings.active');
         let interestsActiveElements = document.querySelectorAll('.loginInterestsWrap .loginInterests .interest.tab.active .zone.active');
@@ -725,10 +1551,10 @@ createUser.addEventListener('click', async function() {
             });
         }
 
-        console.log('profileID:' + profileId);
-        console.log(mainThings);
-        console.log(typeof mainThings);
-        console.log(typeof mainThings[0]);
+        log('profileID:' + profileId);
+        log(mainThings);
+        log(typeof mainThings);
+        log(typeof mainThings[0]);
         // console.log(interests);
 
         // глобальный массив всех обещаний на запись данных 
@@ -745,16 +1571,16 @@ createUser.addEventListener('click', async function() {
         };
         localStorage.setItem('profileVideoIds', JSON.stringify(videoIds));
         
-        console.log('VideoIds которые запушим в мотоко');
-        console.log(videoIds)
-        console.log('photosId которые запушим в мотоко')
-        console.log(photosIdsArray)
+        // console.log('VideoIds которые запушим в мотоко');
+        // console.log(videoIds)
+        // console.log('photosId которые запушим в мотоко')
+        // console.log(photosIdsArray)
     
         let userData = {
             userData : {
                 dateOfBirth : [birthDate],
                 name : [name],
-                profilePhotosIds : photosIdsArray,
+                profilePhotoIds: photosIdsArray,
                 profileVideoIds : videoIds,
                 mainPhoto: [photos[0].src],
                 profileId : [profileId],
@@ -763,6 +1589,8 @@ createUser.addEventListener('click', async function() {
                 interests : interests,
                 conversations : conversations,
                 about : [about],
+                profilePostIds : []
+                // posts: []
             }
         };
         messageForHeart('Create new User');
@@ -770,24 +1598,9 @@ createUser.addEventListener('click', async function() {
         console.log(userData);
 
 
-        // LOAD PHOTOS TO MOTOKO
-        let photosPromiseArr = [];
-        for(let i = 0; i < photos.length; i++) {
-            let base64 = photos[i].src;
-            let key = photosIdsArray[i][0];
-            console.log('CICLE')
-            console.log(base64)
-            console.log(key)
-            photosPromiseArr.push(actor.setPhoto(key, base64));
-        };
-
-        await Promise.all(photosPromiseArr).then((data) => {
-            console.log('мы получили все обещания, все фото загружены в мотоко');
-            console.log(data);
-            console.log(typeof data);
-        });
-
-     
+        
+        let photosRes = await Promise.all(photosObj).then((data) => {return data});
+        log(photosRes)
 
         // set videoIds
             // состовляем массив из массивов с чанками всех загруженых видео (после загрузки юзером они хранятся в videoBase64Array)
@@ -895,8 +1708,10 @@ createUser.addEventListener('click', async function() {
         };
 
     }
+};
 
-});
+
+
 
 
 
@@ -1060,6 +1875,65 @@ uploadImputs.forEach((el) => {
         onFileSelected(event)
     });        
 });   
+
+// обновление || загрузка фото и видео в профиле 
+function onFileAdded(event, type) {
+    let selectedFile = event.target.files[0];
+    let reader = new FileReader();
+    reader.readAsDataURL(selectedFile);
+    reader.onload = function(event) {
+        let boxWrapper = document.querySelector('.addPhotoModal .selects');
+        if (event.target.result.startsWith('data:video')) {
+            
+        } else {
+            let idi = makeid(12);
+            let newBox = `
+            <div class="photoBox img" da="${idi}">
+                <img class="user" src="${event.target.result}" imgId="${imgId}" alt="">
+                <div class="loader-element">
+                    <svg class="spinner" width="25px" height="25px" viewBox="0 0 66 66" xmlns="http://www.w3.org/2000/svg">
+                        <circle class="path" fill="none" stroke-width="6" stroke-linecap="round" cx="33" cy="33" r="30"></circle>
+                    </svg>
+                </div>
+            </div>
+            `;
+            boxWrapper.innerHTML += newBox;
+
+            setTimeout(() => {
+                let img = document.querySelector('img.user[imgId="' + imgId + '"]');
+                const canvas = document.createElement('canvas');
+                const width = 375;
+                const scaleFactor = width / img.width;
+                canvas.width = width;
+                canvas.height = img.height * scaleFactor;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, img.height * scaleFactor);
+                ctx.canvas.toBlob((blob) => {
+                    img.src="";
+                    let rea = new FileReader();
+                    rea.readAsDataURL(blob);
+                    rea.onloadend = function() {
+                        let basee = rea.result;
+                        img.src = basee;
+                        let imgBoxLoader = document.querySelector('.photoBox.img[da="'+ idi +'"] .loader-element');
+                        imgBoxLoader.remove();
+                        if (type == 'avatar' || type == 'newPhoto') {
+                            let addAvatarBtn = document.querySelector('.addPhotoModal button input.updateAvatar');
+                            let addProfileBtn = document.querySelector('.addPhotoModal button input.updateGallery');
+                            let sumbitBtn = document.querySelector('.addPhotoModal .uploadNewPhoto');
+                            let uploadBtn = document.querySelector('.addPhotoModal button.uploadNewPhoto');
+                            addAvatarBtn.parentElement.classList.remove('active');
+                            addProfileBtn.parentElement.classList.remove('active');
+                            sumbitBtn.classList.add('active');
+                            uploadBtn.setAttribute('type', type);
+                            
+                        }
+                    }
+                }, 'image/jpeg', 0.8);
+            }, 800);
+        }
+    };
+};
 
 
 // загрузка фото и видео upload photos and videos 
@@ -1274,8 +2148,7 @@ allIntrestsTags.forEach((el) => {
 });
 
 // SELECTS
-const inputField = document.querySelectorAll('.selectItem');
-const dropdowns = document.querySelectorAll('.value-list');
+
 
 
 inputField.forEach((el) => {
@@ -1305,11 +2178,7 @@ dropdowns.forEach((el) => {
   });
 });
 
-document.addEventListener('click', function() {
-  dropdowns.forEach((el) => {
-    el.classList.remove('open');
-  });
-});
+
 
 
 // FILTER
@@ -1415,39 +2284,51 @@ if (allPanelBtns) {
     allPanelBtns.forEach((el) => {
         el.addEventListener('click', function() {
             if (this.classList.contains('map') && this.classList.contains('main')) {runRoll(); getAllUsers(); offMessagesInterval()}
+            if (this.classList.contains('recomendations') && this.classList.contains('main')) {runRoll();runRoll();runRoll();runRoll();runRoll();runRoll();offMessagesInterval(); loadRecomendations();}
             if (this.classList.contains('chat') && this.classList.contains('main')) {runRoll();runRoll(); getAllConversatioons(); offMessagesInterval()}
             // if (this.classList.contains('poker') && this.classList.contains('main')) {runRoll(); getAllUsers(); offMessagesInterval()}
             if (this.classList.contains('profile') && this.classList.contains('main')) {}
 
+            if (this.classList.contains('map') && this.classList.contains('rec')) {rollBack();rollBack();rollBack();rollBack();rollBack(); getAllUsers(); offMessagesInterval()}
+            if (this.classList.contains('recomendations') && this.classList.contains('rec')) {}
+            if (this.classList.contains('chat') && this.classList.contains('rec')) {rollBack();rollBack();rollBack();rollBack(); getAllConversatioons();}
+            // if (this.classList.contains('poker') && this.classList.contains('users')) {}
+            if (this.classList.contains('profile') && this.classList.contains('rec')) {rollBack();rollBack();rollBack();rollBack();rollBack();rollBack();getProfile(null, who)}
+
             if (this.classList.contains('map') && this.classList.contains('users')) {}
+            if (this.classList.contains('recomendations') && this.classList.contains('users')) {runRoll();runRoll();runRoll();runRoll();runRoll();offMessagesInterval();loadRecomendations();}
             if (this.classList.contains('chat') && this.classList.contains('users')) {runRoll(); getAllConversatioons();}
             // if (this.classList.contains('poker') && this.classList.contains('users')) {}
-            if (this.classList.contains('profile') && this.classList.contains('users')) {rollBack();}
+            if (this.classList.contains('profile') && this.classList.contains('users')) {rollBack();getProfile(null, who)}
 
 
             if (this.classList.contains('map') && this.classList.contains('conversations')) {rollBack(); getAllUsers();offMessagesInterval()}
+            if (this.classList.contains('recomendations') && this.classList.contains('conversations')) {runRoll();runRoll();runRoll();runRoll();offMessagesInterval();loadRecomendations();}
             if (this.classList.contains('chat') && this.classList.contains('conversations')) {offMessagesInterval()}
             // if (this.classList.contains('poker') && this.classList.contains('conversations')) {rollBack(); getAllUsers();offMessagesInterval()}
-            if (this.classList.contains('profile') && this.classList.contains('conversations')) {rollBack();rollBack();offMessagesInterval()}
+            if (this.classList.contains('profile') && this.classList.contains('conversations')) {rollBack();rollBack();offMessagesInterval();getProfile(null, who)}
 
 
             if (this.classList.contains('map') && this.classList.contains('chatWindow')) {rollBack();rollBack(); getAllUsers(); offMessagesInterval()}
+            if (this.classList.contains('recomendations') && this.classList.contains('chatWindow')) {runRoll();runRoll();runRoll();offMessagesInterval();loadRecomendations();}
             if (this.classList.contains('chat') && this.classList.contains('chatWindow')) {}
             // if (this.classList.contains('poker') && this.classList.contains('chatWindow')) {rollBack();rollBack(); getAllUsers(); offMessagesInterval()}
-            if (this.classList.contains('profile') && this.classList.contains('chatWindow')) {rollBack();rollBack();rollBack(); offMessagesInterval()}
+            if (this.classList.contains('profile') && this.classList.contains('chatWindow')) {rollBack();rollBack();rollBack(); offMessagesInterval();getProfile(null, who)}
 
 
 
             if (this.classList.contains('map') && this.classList.contains('otherUser')) {rollBack();rollBack();rollBack(); getAllUsers();offMessagesInterval()}
-            if (this.classList.contains('chat') && this.classList.contains('otherUser')) {rollBack();rollBack(); getAllUsers();offMessagesInterval()}
+            if (this.classList.contains('recomendations') && this.classList.contains('otherUser')) {runRoll();runRoll();offMessagesInterval();loadRecomendations();}
+            if (this.classList.contains('chat') && this.classList.contains('otherUser')) {rollBack();rollBack(); getAllUsers(); getAllConversatioons(); offMessagesInterval()}
             // if (this.classList.contains('poker') && this.classList.contains('otherUser')) {rollBack();rollBack();rollBack(); getAllUsers();offMessagesInterval()}
-            if (this.classList.contains('profile') && this.classList.contains('otherUser')) {rollBack();rollBack();rollBack();rollBack();offMessagesInterval()}
+            if (this.classList.contains('profile') && this.classList.contains('otherUser')) {rollBack();rollBack();rollBack();rollBack();offMessagesInterval();getProfile(null, who)}
 
 
             if (this.classList.contains('map') && this.classList.contains('community')) {rollBack();rollBack();rollBack();rollBack(); getAllUsers();offMessagesInterval()}
-            if (this.classList.contains('chat') && this.classList.contains('community')) {rollBack();rollBack();rollBack(); getAllUsers();offMessagesInterval(); getAllConversatioons();}
+            if (this.classList.contains('recomendations') && this.classList.contains('community')) {runRoll();offMessagesInterval();loadRecomendations();}
+            if (this.classList.contains('chat') && this.classList.contains('community')) {rollBack();rollBack();rollBack();offMessagesInterval(); getAllConversatioons();}
             // if (this.classList.contains('poker') && this.classList.contains('otherUser')) {rollBack();rollBack();rollBack(); getAllUsers();offMessagesInterval()}
-            if (this.classList.contains('profile') && this.classList.contains('community')) {rollBack();rollBack();rollBack();rollBack();rollBack();offMessagesInterval()}
+            if (this.classList.contains('profile') && this.classList.contains('community')) {rollBack();rollBack();rollBack();rollBack();rollBack();offMessagesInterval();getProfile(null, who)}
         });
     });
 
@@ -1464,19 +2345,16 @@ function offMessagesInterval() {
 
 /////////// GET ALL CONVERSATIONS 
 async function getAllConversatioons() {
-    preloaderOn();
-    messageForHeart('Get your conversations');
-    let res = await actor.read();
-    console.log(res[0].userData.conversations)
 
+    let res = myMotokoObject
+    console.log(res.conversations)
 
-
-    if (res[0].userData.conversations.length !== 0) {
+    if (res.conversations.length !== 0) {
         let sorted = [];
         // сортировка на повторку
-        for(let i = 0; i < res[0].userData.conversations.length; i++) {
-            if (!sorted.includes(res[0].userData.conversations[i][0])) {
-                sorted.push(res[0].userData.conversations[i][0]);
+        for(let i = 0; i < res.conversations.length; i++) {
+            if (!sorted.includes(res.conversations[i][0])) {
+                sorted.push(res.conversations[i][0]);
             }
         };
         console.log(sorted);
@@ -1496,16 +2374,9 @@ async function getAllConversatioons() {
                 
                 // массив объектов конвертаций и массив номеров конвертаций в том же порядке 
             });
-    
     } else {
         preloaderOff();
     }
-
-    
-
-
-
-
 };
 
 // счетчик полных конверсаций которые будут выведены на страницу
@@ -1676,20 +2547,52 @@ async function renderConversations(conversationsArr) {
 ////////// GET ALL USERS
 
 
-async function getAllUsers() {
-    preloaderOn();
-    messageForHeart('Get all users');
-    let result = await actor.allUsers();
-    console.log(result);
-    renderAllUsers(result);
-};
+// async function getAllUsers() {
+    
+//     console.log(result);
+//     renderAllUsers(result);
+// };
 
 
 let yearsFilter = [1,10000];
 let genderFilter = 'All';
 
 let forFilterAllUsers = [];
-function renderAllUsers(result) {
+async function getAllUsers() {
+    let allUsersWrap = document.querySelector('.allUsersWrap .allUsers');
+    //отрисовка фейка 
+    for(let i = 0; i < 12; i++) {
+        let userItem = `
+        <div class="user preload">
+            <div class="userPhoto">
+                <div class="preElement active" style="width: 80px; height: 80px;"></div>
+            </div>
+            <div class="userInfo">
+                <p class="preElement active" style="width: 60px; height: 18px;"></p>
+                <span class="preElement active" style="width: 20px; height: 15px; margin-top: 2px; margin-left: 21px;"></span>
+            </div>
+        </div>
+        `;
+
+        allUsersWrap.innerHTML += userItem;
+    };
+
+    let allUserItemsPreload = document.querySelectorAll('.allUsersWrap .allUsers .user');
+    allUserItemsPreload.forEach((el) => {
+        if (!el.classList.contains('preload')) {
+            el.addEventListener('click', function() {
+                let principal = this.getAttribute('principal');
+                openUserProfile(principal);
+            });
+        }
+    });
+
+    let result = await actor.allUsers();
+    // throw 'err'
+    
+
+
+
     forFilterAllUsers = [];
     // сразу же перебираем результаты согласно фильтру и отдаем в фор фильтер 
     result.forEach((el) => {
@@ -1734,8 +2637,8 @@ function renderAllUsers(result) {
     });
     // forFilterAllUsers = result;
 
-    preloaderOff();
-    let allUsersWrap = document.querySelector('.allUsersWrap .allUsers');
+    // preloaderOff();
+    
     allUsersWrap.innerHTML = "";
     forFilterAllUsers.forEach((el) => {
         // Конвертируем дату в года и выводим в профиль
@@ -1823,11 +2726,18 @@ filterByYears.forEach((el) => {
 
 
 async function openUserProfile(principalString, runRolls) {
-    preloaderOn();
-    messageForHeart('Download user profile');
-    let user = await actor.getUser(principalString);
-    let mySubsriptions = await actor.getSubscriptions(who.toString());
-    console.log(user);
+    // preloaderOn();
+    // messageForHeart('Download user profile');
+    let profilePhotosWrap = document.querySelector('.tab.user .selectPhotosWrap');
+    profilePhotosWrap.innerHTML = "";
+    let mainPh = document.querySelector('.tab.user .profile_information .photo_box img');
+    let preEl = document.querySelector('.tab.user .profile_information .photo_box .preElement');
+    mainPh.style.display = "none";
+    preEl.classList.add('active');
+    let subscrBtn = document.querySelector('.profileBtn.subscribe');
+    subscrBtn.classList.add('block');
+
+
     if (runRolls == null) {
         runRoll();
         runRoll();
@@ -1840,8 +2750,18 @@ async function openUserProfile(principalString, runRolls) {
         rollBack();
     }
 
-    renderUserProfile(user[0].userData, user[0].id, mySubsriptions);
+    await Promise.all([actor.getUser(principalString), actor.getSubscriptions(who.toString())]).then((data) => {
+        let user = data[0];
+        let mySubsriptions = data[1];
+        lastViewedProfileObject = user[0].userData;
+        console.log(user);
+        log('запускаем функцию получения профиля');
+        renderUserProfile(user[0].id, mySubsriptions);
+    });
+  
 }
+
+
 
 // listen subscribe Button 
 let subscribeButton = document.querySelector('.tab.user .profileBtn.subscribe');
@@ -1882,22 +2802,18 @@ subscribeButton.addEventListener('click', async function() {
         // проверяем имеется ли принципал опанента в массиве если нет то добавляем 
         let boo = subscriptionObj[0].includes(opanentPrincipalString);
         console.log(boo);
-        // проверяем имеется ли наш принципал у апонента в подписках если нет то добавляем
-        let boo2 = subscriberObj[0].includes(myPrincipalString);
-        if (boo == false && boo2 == false) {
-
-            console.log('не подписаны');
+        if (boo == false) {
             subscriptionObj[0].push(opanentPrincipalString);
             let res  = await actor.setSubscriptions(myPrincipalString, subscriptionObj[0]);
+        }
+        // проверяем имеется ли наш принципал у апонента в подписках если нет то добавляем
+        let boo2 = subscriberObj[0].includes(myPrincipalString);
+        if (boo2 == false) {
             subscriberObj[0].push(myPrincipalString);
             let res2 = await actor.setSubscribers(opanentPrincipalString, subscriberObj[0]);
-            this.classList.remove('block');
-            console.log(res)
-            console.log(res2)
-            
-        } else {
-            alert('you are following this user')
         }
+        this.classList.remove('block');
+
     }
   
 
@@ -1906,14 +2822,24 @@ subscribeButton.addEventListener('click', async function() {
 
 });
 
-async function renderUserProfile(userData, principal, mySubscriptions) {
+async function renderUserProfile(principal, mySubscriptions) {
     // сразу же получаем список наших подписчиков, и если человек есть в нашем списке меняем кнопку на отписаться.
+    lastViewedPrincipal = principal.toText();
     let subscriber = mySubscriptions[0].includes(principal.toText());
     if (subscriber == true) {
         console.log('подписаны')
         let subscribeButton = document.querySelector('.tab.user .profileBtn.subscribe');
         subscribeButton.querySelector('span').innerText = 'Unsubscribe';
         subscribeButton.setAttribute('event','unsubscribe');
+        let subscrBtn = document.querySelector('.profileBtn.subscribe');
+        subscrBtn.classList.remove('block');
+    } else {
+        console.log('не подписаны');
+        let subscribeButton = document.querySelector('.tab.user .profileBtn.subscribe');
+        subscribeButton.querySelector('span').innerText = 'Subscribe';
+        subscribeButton.setAttribute('event','subscribe');
+        let subscrBtn = document.querySelector('.profileBtn.subscribe');
+        subscrBtn.classList.remove('block');
     }
     //
     let photo = document.querySelector('.tab.user .profile_information .photo_box img');
@@ -1924,32 +2850,43 @@ async function renderUserProfile(userData, principal, mySubscriptions) {
     // let aboutProfile = document.querySelector('.userAreaWrap .userArea .about p');
     let mainName = document.querySelector('.tab.user .name_age_box .name');
     let subscribeButton = document.querySelector('.tab.user .profileBtn.subscribe');
+
+    //чистим страничку блога от предыдущего пользователя
+    let blogsWrap = document.querySelector('.tab.user .profileBlog .blogWrap .blogPosts');
+    blogsWrap.innerHTML = "";
+
+    // убираем прелоадер с главного фото
+    let mainPh = document.querySelector('.tab.user .profile_information .photo_box img');
+    let preEl = document.querySelector('.tab.user .profile_information .photo_box .preElement');
+    mainPh.style.display = "block";
+    preEl.classList.remove('active');
+
+    mainName.innerText = lastViewedProfileObject.name;
+    photo.src = lastViewedProfileObject.mainPhoto[0];
     
     sendMessage.setAttribute('profilePrincipal', principal.toText());
-    sendMessage.setAttribute('profileId', userData.profileId);
+    sendMessage.setAttribute('profileId', lastViewedProfileObject.profileId);
     subscribeButton.setAttribute('profilePrincipal', principal.toText());
 
-    let profilePhotosIds = userData.profilePhotosIds;
-    let getVideoIds = userData.profileVideoIds;
+    let profilePhotoIds = lastViewedProfileObject.profilePhotoIds;
+    let getVideoIds = lastViewedProfileObject.profileVideoIds;
     console.log('АЙДИШНИКИ ВСЕХ ФОТО ПОЛЬЗОВАТЕЛЯ');
-    console.log(profilePhotosIds)
+    console.log(profilePhotoIds)
     console.log('АЙДИШНИКИ ВСЕХ ВИДЕО ПОЛЬЗОВАТЕЛЯ');
     console.log(getVideoIds);
     // собираем массив обещаний на получение фотографий
     let photosPromise = [];
-    profilePhotosIds.forEach((el) => {
+    profilePhotoIds.forEach((el) => {
         photosPromise.push(actor.getPhoto(el[0]));
     });
     // получаем обещания фотографий 
-    let photos = await Promise.all(photosPromise).then((data) => {
-        return data;
-    });
+    let photos = await Promise.all(photosPromise).then((data) => {return data.reverse()});
     console.log('ПОЛУЧИЛИ ВСЕ ФОТО ЮЗЕРА')
     console.log(photos)
     let profilePhotosWrap = document.querySelector('.tab.user .selectPhotosWrap');
     profilePhotosWrap.innerHTML = "";
     photos.forEach((el) => {
-        let child = '<div class="child"><img class="photoChildImg" src="'+ el[0] +'" alt=""></div>';
+        let child = '<div class="child"><img class="photoChildImg" src="'+ el[0].src[0] +'" alt=""></div>';
         profilePhotosWrap.innerHTML += child;
     });
     // закончили вывод фото в профиль юзера
@@ -1991,55 +2928,193 @@ async function renderUserProfile(userData, principal, mySubscriptions) {
         
         profilePhotosWrap.innerHTML += videoItem;
     };
+     // рендерим плееры равное количеству наших видео 
+     let videoWrap = document.querySelector('.tab.user .videoModalWrap');
+     videoWrap.innerHTML = '';
+     for(let j = 0; j < getVideoIds.length; j++) {
+         let item = `
+         <video id="video" preload="auto" width="370" videoId='${getVideoIds[j]}' controls>
+             <source src="">
+         </video>
+         `;
+         videoWrap.innerHTML += item;
+     };
+
+
+         // получаем наши посты из блога 
+         if (lastViewedProfileObject.profilePostIds.length !== 0) {
+            // let postsCount = Number(lastViewedProfileObject.profilePostIds.length);
+            // let opanentId = lastViewedProfileObject.profileId;
+
+            let likesPostsArr = [];
+            if (myLikesObject.length !== 0) {
+                likesPostsArr = myLikesObject[0];
+            }
+
+            let promiseArr = [];
+            
+            for(let i = 0; i < lastViewedProfileObject.profilePostIds.length; i++) {
+                promiseArr.push(actor.getPost(lastViewedProfileObject.profilePostIds[i][0]));
+            };
+
+            let postsWrap = document.querySelector('.tab.user .profileBlog .blogWrap .blogPosts');
+            postsWrap.innerHTML = "";
+
+            await Promise.all(promiseArr).then(async (data) => {
+                console.log(data)
+
+                for(let i = data.length - 1; i > -1; i--) {
+                    if (data[i].length) {
+                        let postItem;
+                        if (data[i][0].vid.length !== 0) {
+                            let opRes = await actor.getUser(data[i][0].opId[0]);
+                            let origPosData = await actor.getPost(data[i][0].repOrigPostId[0]);
+                            log('EROOOR')
+                            log(opRes[0].userData.name);
+                            log(origPosData[0].text);
+                            postItem = `
+                            <div class="blogPost" itemId="${data[i][0].id[0]}" coms="${data[i][0].comments}" style="flex-direction: column; padding-bottom: 0;">
+                                
+                                <div class="wrap">
+                         
+                                    <div class="info">
+                                        <span style="color: rgb(65, 65, 65); font-weight: 400; font-size: 13px;">Repost</span>
+                                    </div>
+                                </div>
+            
+                                <div class="repData" style="display: flex; margin-top: 6px;">
+                                    <div class="photo">
+                                        <img src="${opRes[0].userData.mainPhoto[0]}">
+                                    </div>
+                                    <div class="info">
+                                        <span>${opRes[0].userData.name[0]}</span>
+                                        <p>${origPosData[0].text[0]}<p/>
+                                    </div">
+                                </div>
+                            </div>
+                        `;
+                        postsWrap.innerHTML += postItem
+                        } else {
+                            if (likesPostsArr.includes(data[i][0].id[0])) {
+                                postItem = `
+                                <div class="blogPost" itemId="${data[i][0].id[0]}"  coms="${data[i][0].comments}">
+                                    <div class="photo">
+                                        <img src="${lastViewedProfileObject.mainPhoto}" alt="">
+                                    </div>
+                                    <div class="info">
+                                        <span>${lastViewedProfileObject.name}</span>
+                                        <p>${data[i][0].text}</p>
+                                        <div class="social">
+                           
+                                            <div class="likes">
+                                                <img class="active" itemId="${data[i][0].id[0]}" src="img/like.svg" alt="">
+                                                <span>${data[i][0].likes}</span>
+                                            </div>
+                                            <div class="comments" itemId="${data[i][0].id[0]}" coms="${data[i][0].comments}">
+                                                <img src="img/comment.svg" alt="">
+                                                <span>${data[i][0].comments}</span>
+                                            </div>
+                                            <div class="reposts" itemId="${data[i][0].id[0]}" princ="${lastViewedPrincipal}">
+                                                <img src="img/reposts.svg" alt="">
+                                                <span>${data[i][0].reposts}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            } else {
+                                postItem = `
+                                <div class="blogPost" itemId="${data[i][0].id[0]}" coms="${data[i][0].comments}">
+                                    <div class="photo">
+                                        <img src="${lastViewedProfileObject.mainPhoto}" alt="">
+                                    </div>
+                                    <div class="info">
+                                        <span>${lastViewedProfileObject.name}</span>
+                                        <p>${data[i][0].text}</p>
+                                        <div class="social">
+              
+                                            <div class="likes">
+                                                <img itemId="${data[i][0].id[0]}" src="img/like.svg" alt="">
+                                                <span>${data[i][0].likes}</span>
+                                            </div>
+                                                <div class="comments" itemId="${data[i][0].id[0]}" coms="${data[i][0].comments}">
+                                                <img src="img/comment.svg" alt="">
+                                                <span>${data[i][0].comments}</span>
+                                            </div>
+                                            <div class="reposts" itemId="${data[i][0].id[0]}" princ="${lastViewedPrincipal}">
+                                                <img src="img/reposts.svg" alt="">
+                                                <span>${data[i][0].reposts}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                            }
+                            
+        
+                            postsWrap.innerHTML += postItem
+                        }
+
+
+                    
+                    }
+                    
+                };
+                // listen likes 
+                let likes = document.querySelectorAll(".tab.user .profileBlog .blogWrap .blogPosts .blogPost .info .social .likes img");
+                
+                likes.forEach((el) => {
+                    el.addEventListener('click', function() {
+                        setLike(this);
+                    });
+                });
+
+                        // listen comments 
+                let commentsBtn = document.querySelectorAll('.tab.user .profileBlog .blogWrap .blogPosts .blogPost .info .social .comments');
+                commentsBtn.forEach((el) => {
+                    el.addEventListener('click', function() {
+                        let blogId = this.getAttribute('itemid');
+                        let comsCount = this.getAttribute('coms');
+                        openCommentsModal(this, 'user', blogId, comsCount);
+                    });
+                });
+
+                // listen reposts
+                let repostsBtn = document.querySelectorAll('.tab.user .profileBlog .blogWrap .blogPosts .blogPost .info .social .reposts');
+                repostsBtn.forEach((el) => {
+                    el.addEventListener('click', function() {
+                        let blogId = this.getAttribute('itemid');
+                        let princ = this.getAttribute('princ');
+                        repostQuery(this, princ, blogId);
+                    });
+                });
+           
+            });
+        }
+
+
     addEventListenersUserVideos();
     addEventListenersUserPhotos();
     clickAllUserVideos();
-    // addEventListenersProfileVideos();
-    // addEventListenersProfilePhotos();
-    // clickAllProfileVideos(); 
+  
+
+    
 
 
 
-    let mainThings = userData.mainThings;
-    let interests = userData.interests;
+
+    let mainThings = lastViewedProfileObject.mainThings;
+    let interests = lastViewedProfileObject.interests;
     console.log(mainThings)
     console.log(interests)
     console.log('ТАК ВЫГЛЯДИТ АБАУТ');
-    console.log(userData.about)
-    // if (userData.about.length == 0) {
-    //     aboutBlock.style.display = "none";
-    // } else {
-    //     aboutBlock.style.display = "block";
-    //     aboutProfile.innerText = userData.about;
-    // }
+    console.log(lastViewedProfileObject.about)
     
-    mainName.innerText = userData.name;
-    photo.src = photos[0][0];
-    lastViewedProfilePhoto = photos[0][0];
-    lastViewedProfileName = userData.name;
     
-
-
-
-    // tagAreaMain.innerHTML = "";
-    // for(let i = 0; i < mainThings.length; i++) {
-    //     let data = mainThings[i][0].split('#');
-    //     let mainTag = `
-    //         <span style="background-color: #${data[1]};" class="tag">${data[0]}</span>
-    //     `;
-    //     tagAreaMain.innerHTML += mainTag;
-    // };
-    // tagAreaInterests.innerHTML = "";
-  
-    // for(let i = 0; i < interests.length; i++) {
-    //     let data = interests[i][0].split('#');
-    //     let interestsTag = `
-    //         <span style="background-color: #${data[1]};" class="tag">${data[0]}</span>
-    //     `;
-    //     tagAreaInterests.innerHTML += interestsTag;
-
-    // };
-
+    
+    lastViewedProfilePhoto = lastViewedProfileObject.mainPhoto[0];
+    lastViewedProfileName = lastViewedProfileObject.name;
+    
     preloaderOff();
 };
 
@@ -2159,7 +3234,79 @@ async function messageArea(conversationId, reverseConversation, myId, userId) {
 
 };
 
+  
+ document.addEventListener('click', function(e) {
+     log(e.target)
 
+    // закрывашка всех дропдаунов
+    dropdowns.forEach((el) => {
+        el.classList.remove('open');
+    });
+});
+
+let textInput = document.querySelector('.tab.chat .textarea input'); 
+let send = document.querySelector('.tab.chat .textarea button');
+
+
+async function sendMes(message) {
+    let freshConversationId = send.getAttribute('conversationId');
+    
+    if (message !== "") {
+            /// get last mesages
+            let last = await actor.getConversation(freshConversationId);
+            // console.log(last[0]);      <------ массив с объектами сообщений 
+            let messageId = makeid(16);
+
+            let newMessage = {
+                userId : [myProfId[0]],
+                userPrincipalText : [myPrincipal],
+                messageId: [messageId],
+                text : [message]
+            };
+            last[0].push(newMessage);
+            console.log(last[0]);
+            textInput.value = "";
+            // выводим фейк в поле сообщений
+            let messageZone = document.querySelector('.messagesWrap .messages');
+            let messageText = message;
+            if (message.startsWith('-=')) {
+                let way;
+                switch(true) {
+                    case message == '-=smile=-' : way = 'img/emoji/smile.png';break;
+                    case message == '-=hi=-' : way = 'img/emoji/hi.png';break;
+                    case message == '-=bad=-' : way = 'img/emoji/bad.png';break;
+                    case message == '-=laugh=-' : way = 'img/emoji/laugh.png';break;
+                    case message == '-=like=-' : way = 'img/emoji/like.png';break;
+                    case message == '-=nia=-' : way = 'img/emoji/nia.png';break;
+                    case message == '-=ooh=-' : way = 'img/emoji/ooh.png';break;
+                    case message == '-=rage=-' : way = 'img/emoji/rage.png';break;
+                    case message == '-=super=-' : way = 'img/emoji/super.png';break;
+                }
+                messageText = `<img src="${way}" >`;
+            }
+            let messageItem = `
+                <div class="message me" messageId="${messageId}">
+                    <div class="photo">
+                        <img src="${myPhoto}" alt="">
+                    </div>
+                    <div class="text">
+                        <p>${messageText}</p>
+                    </div>
+                </div>
+            `;
+            messageZone.innerHTML += messageItem;
+            messageZone.scrollIntoView(false);
+            
+          
+
+
+            // preloaderOn();
+            // messageForHeart('Sending a message');
+            let exportResult = await actor.setConversation(freshConversationId, last[0]);
+            console.log(exportResult);
+            // preloaderOff();
+    }
+}
 
 /////////// LOAD MESSAGES 
 let fresh;
@@ -2176,9 +3323,9 @@ function renderMessages(conversationId ,conversationObject, opanentProfileData) 
     // Если перед рендером мы просматривали профиль пользователя тогда используем данные из переменных last view 
     // Если нет получаем пользователя 
     if (opanentProfileData == 'fromProfile') {
-        opanentPhoto.src = lastViewedProfilePhoto[0];
+        opanentPhoto.src = lastViewedProfilePhoto;
         opanentUpName.innerText = lastViewedProfileName;
-        opanentPhotoUrl = lastViewedProfilePhoto[0];
+        opanentPhotoUrl = lastViewedProfilePhoto;
     } else {
         console.log('ДАЕМ ДАННЫЕ ОПАНЕНТУ ФОТО И ИМЯ ')
         opanentPhoto.src = opanentProfileData.mainPhoto;
@@ -2356,76 +3503,10 @@ function renderMessages(conversationId ,conversationObject, opanentProfileData) 
         });
     }
 
-    // прослушка каждого смайлика 
-    document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('emoji')) {
-            let value = e.target.parentElement.getAttribute('value');
-            sendMes(value);
-            let smilesModal = document.querySelector('.smileModal');
-            smilesModal.classList.remove('active');
-        };
-    });
+   
 
 
-    async function sendMes(message) {
-        let freshConversationId = send.getAttribute('conversationId');
-        
-        if (message !== "") {
-                /// get last mesages
-                let last = await actor.getConversation(freshConversationId);
-                // console.log(last[0]);      <------ массив с объектами сообщений 
-                let messageId = makeid(16);
-
-                let newMessage = {
-                    userId : [myProfId[0]],
-                    userPrincipalText : [myPrincipal],
-                    messageId: [messageId],
-                    text : [message]
-                };
-                last[0].push(newMessage);
-                console.log(last[0]);
-                textInput.value = "";
-                // выводим фейк в поле сообщений
-                let messageZone = document.querySelector('.messagesWrap .messages');
-                let messageText = message;
-                if (message.startsWith('-=')) {
-                    let way;
-                    switch(true) {
-                        case message == '-=smile=-' : way = 'img/emoji/smile.png';break;
-                        case message == '-=hi=-' : way = 'img/emoji/hi.png';break;
-                        case message == '-=bad=-' : way = 'img/emoji/bad.png';break;
-                        case message == '-=laugh=-' : way = 'img/emoji/laugh.png';break;
-                        case message == '-=like=-' : way = 'img/emoji/like.png';break;
-                        case message == '-=nia=-' : way = 'img/emoji/nia.png';break;
-                        case message == '-=ooh=-' : way = 'img/emoji/ooh.png';break;
-                        case message == '-=rage=-' : way = 'img/emoji/rage.png';break;
-                        case message == '-=super=-' : way = 'img/emoji/super.png';break;
-                    }
-                    messageText = `<img src="${way}" >`;
-                }
-                let messageItem = `
-                    <div class="message me" messageId="${messageId}">
-                        <div class="photo">
-                            <img src="${myPhoto}" alt="">
-                        </div>
-                        <div class="text">
-                            <p>${messageText}</p>
-                        </div>
-                    </div>
-                `;
-                messageZone.innerHTML += messageItem;
-                messageZone.scrollIntoView(false);
-                
-              
-
-
-                // preloaderOn();
-                // messageForHeart('Sending a message');
-                let exportResult = await actor.setConversation(freshConversationId, last[0]);
-                console.log(exportResult);
-                // preloaderOff();
-        }
-    }
+   
 
 
 
@@ -2439,6 +3520,7 @@ function renderMessages(conversationId ,conversationObject, opanentProfileData) 
     let upBlockUser = document.querySelector('.opponent');
     upBlockUser.addEventListener('click', function() {
         let principal = this.getAttribute('principal');
+        offMessagesInterval();
         openUserProfile(principal, 1);
         console.log('выполнили РО')
     });
@@ -2500,8 +3582,8 @@ function renderMessages(conversationId ,conversationObject, opanentProfileData) 
         await Promise.all(promiseArr).then((data) => {
             subscriptionObj = data[0];
             subscriberObj = data[1];
-            subscriptionObjCount = data[0].length;
-            subscriberObjCount = data[1].length;
+            subscriptionObjCount = data[0][0].length;
+            subscriberObjCount = data[1][0].length;
         });
         console.log(subscriptionObj)
         console.log(subscriberObj)
@@ -2747,15 +3829,6 @@ function renderMessages(conversationId ,conversationObject, opanentProfileData) 
     }
 
 
-// прослушка кнопки смайликов 
-// event listener smile
-
-let smileBtn = document.querySelector('.smilebtn');
-smileBtn.addEventListener('click', function() {
-    let smileModal = document.querySelector('.smileModal');
-    smileModal.classList.add('active');
-});
-
 
 
 // block upload блокировка загрузки
@@ -2789,3 +3862,130 @@ allDiamonds.forEach((el) => {
     });
 });
 
+
+
+// BLOG LISTENERS 
+
+let sendPost = document.querySelector('.profileBlog .inputSendBlog img');
+let postInput = document.querySelector('.profileBlog .inputSendBlog input');
+
+sendPost.addEventListener('click', async function() {
+    if (postInput.value !== "") {
+        console.log(myMotokoObject);
+        console.log(myMotokoObject.profilePostIds)
+
+        let postId = makeid(32);
+        // if (myMotokoObject.profilePostIds.length == 0) {
+        //     // это первый наш пост
+        //     postNumber = '0';
+        // } else {
+        //     // это не первый пост
+        //     postNumber = String(Number(myMotokoObject.profilePostIds) + 1);
+        // }
+        // выводим пост на страницу 
+        let postsWrap = document.querySelector('.profileBlog .blogWrap .blogPosts');
+
+        let postItem = `
+            <div class="blogPost" itemId="${postId}" coms="0">
+                <div class="remove">
+                    <img src="img/closed.svg">
+                </div>
+                <div class="photo">
+                    <img src="${myMotokoObject.mainPhoto}" alt="">
+                </div>
+                <div class="info">
+                    <span>${myMotokoObject.name}</span>
+                    <p>${postInput.value}</p>
+                    <div class="social">
+
+                        <div class="likes">
+                            <img src="img/like.svg" itemId="${postId}" alt="">
+                            <span>0</span>
+                        </div>
+                        <div class="comments" itemId="${postId}" coms="0">
+                        <img src="img/comment.svg" alt="">
+                        <span>0</span>
+                    </div>
+                    <div class="reposts">
+                        <img src="img/reposts.svg" alt="">
+                        <span>0</span>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        postsWrap.insertAdjacentHTML('afterbegin', postItem);
+
+
+        // listen remove
+        let remove = document.querySelector(".profileBlog .blogWrap .blogPosts .blogPost[itemId='"+ postId +"'] .remove"); 
+        remove.addEventListener('click', function() {
+            removePost(this);
+        });
+        
+        // listen like
+        let like = document.querySelector(".profileBlog .blogWrap .blogPosts .blogPost[itemId='"+ postId +"'] .info .social .likes img");
+        like.addEventListener('click', function() {
+                setLike(this);
+        });
+
+        // listen comment
+        let commentBtn = document.querySelector(".profileBlog .blogWrap .blogPosts .blogPost[itemId='"+ postId +"'] .info .social .comments");
+        commentBtn.addEventListener('click', function() {
+                let blogId = this.getAttribute('itemid');
+                let comsCount = this.getAttribute('coms');
+                openCommentsModal(this, null, blogId, comsCount);
+        });
+        
+
+        // let postId = myMotokoObject.profileId + postNumber;
+        // записываем пост в базу
+        let text = postInput.value;
+        postInput.value = "";
+        
+        
+        // записываем новое количество постов в профиль
+        // let freshe = myMotokoObject.profilePostIds;
+        // freshe.push([postId]);
+
+        // myMotokoObject.profilePostIds = freshe;
+        
+        myMotokoObject.profilePostIds.push([postId]);
+        let ress = await Promise.all([actor.setPost(postId, {id: [postId], text: [text], likes: ['0'], comments: ['0'], reposts: ['0'], vid : [], opId : [], repOrigPostId: []}),actor.updateUserData(myPrincipal, {userData: myMotokoObject})]).then((data) => {return data});
+        console.log(ress)
+        
+
+
+    }
+});
+
+
+
+
+async function deletePhoto(element) {
+    let modal = document.querySelectorAll('.photoModal');
+    modal.forEach((el) => {
+        el.classList.remove('active');
+    });
+    let baseid = element.parentElement.getAttribute('baseid');
+    let photoInProfile = document.querySelector('.tab.profile .selectPhotos .child .photoChildImg[baseid="' + baseid + '"]');
+    photoInProfile.remove();
+    // getProfile(null, who);
+    
+    myMotokoObject.profilePhotoIds.forEach((el, ind) => {
+        if (el[0] == baseid) {myMotokoObject.profilePhotoIds.splice(ind, 1)}
+    });
+    let resultObj = {
+        userData : myMotokoObject
+    }
+    element.classList.add('block');
+
+    let result = await Promise.all([actor.updateUserData(myPrincipal, resultObj), actor.deletePhoto(baseid)]).then((data) => {return data});
+    log(result); 
+    element.classList.remove('block');
+}
+
+} catch(e) {
+    alert(e);
+}

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <title>Tingram</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -117,7 +117,7 @@
                     <div class="global_input">
                         <span>What's your name?</span>
                         <input class="newName" type="text" placeholder="Enter your name">
-                        <img src="img/line.png" alt="">
+                        <!-- <img src="img/line.png" alt=""> -->
                     </div>
                     
                     <div class="global_input">
@@ -132,18 +132,18 @@
                               <li>Other</li>
                             </ul>
                      
-                        <img src="img/line.png" alt="">
+                        <!-- <img src="img/line.png" alt=""> -->
                     </div>
 
                     <div class="global_input">
                         <span>When were you born?</span>
                         <input class="newDate" type="date" >
-                        <img src="img/line.png" alt="">
+                        <!-- <img src="img/line.png" alt=""> -->
                     </div>
                     <div class="global_input">
                         <span>Few words about yourself</span>
                         <input class="about" type="text" placeholder="About">
-                        <img src="img/line.png" alt="">
+                        <!-- <img src="img/line.png" alt=""> -->
                     </div>
                     <div class="global_continue">
                         <button class="continue checkNameDate">Continue</button>
@@ -294,10 +294,25 @@
                     <div class="videoModal" >
                         <img src="img/closed.svg" alt="">
                         <div class="videoModalWrap">
-                            <video id="video" width="370" controls>
+                            <!-- <video id="video" width="370" controls>
                                 <source src="">
-                            </video>
+                            </video> -->
                         </div>
+                    </div>
+
+                    <div class="addPhotoModal">
+                        <button class="active">Update main photo
+                            <input class="updateAvatar" type="file" >
+                        </button>
+                        <button class="active">Upload new photo
+                            <input class="updateGallery" type="file" >
+                        </button>
+                        <div class="selects">
+
+                        </div>
+                        <button class="uploadNewPhoto">
+                            Upload
+                        </button>
                     </div>
 
                     <div class="settings_modal">
@@ -326,7 +341,8 @@
                         <div class="left">
                             <div class="profilePhotoWrap">
                                 <div class="photo_box">
-                                    <img src="img/logo_profile.png" alt="">
+                                    <div class="preElement active" style="width: 90px; height: 90px"></div>
+                                    <img style="display: none" src="" alt="">
                                 </div>
                                 <div class="upload">
                                     <img src="img/icon-camera.svg" alt="">
@@ -334,8 +350,8 @@
                             </div>
 
                             <div class="name_age_box">
-                                <span class="name">Anna Jonson</span>
-                                <span class="age">20</span>
+                                <span class="name"></span>
+                                <span class="age"></span>
                             </div>
                             <!-- <a href="" class="premium_button">
                                 <img src="img/premium_btn.png" alt="">
@@ -383,6 +399,37 @@
                         </div>
                     </div>
 
+                    <div class="commentsModal">
+                        <div class="close">
+                            <img src="img/closed.svg" alt="">
+                        </div>
+
+                        <div class="blogPost">
+                            <div class="photo">
+                                <img src="" alt="">
+                            </div>
+                            <div class="info">
+                                <span>${myMotokoObject.name}</span>
+                                <p>${postInput.value}</p>
+                                
+                            </div>
+                        </div>
+
+                        <div class="commentsWrap">
+                            <div class="comments">
+                                <!-- <p>There are no comments yet</p> -->
+                                
+                            </div>
+                        </div>
+
+                        <div class="textArea">
+                            <input type="text" placeholder="Write a comment">
+                            <div class="sen">
+                                <img src="img/send.png"" alt="">
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="profile_tabs_photos">
                         <div class="change photos active">
                             <img src="img/pv.svg" alt="">
@@ -395,20 +442,63 @@
                         </div>
                     </div>
 
-                    <div class="selectPhotos">
-                        <div class="selectPhotosWrap">
+                    <div class="miniRoll">
+                        <div class="selectPhotos">
+                            <div class="selectPhotosWrap">
+    
+                            </div>
+     
+                        </div>
+                        <div class="profileBlog">
+                            <div class="sure">
+                                <div class="remove">
+                                    <img src="img/closed.svg">
+                                </div>
+                                <span>Delete this post?</span>
+                                <div class="btns">
+                                    <button class="yes">Yes</button>
+                                    <button class="no">No</button>
+                                </div>
+                            </div>
 
-                            <!-- <div class="child">
-                                <img src="img/girl1.png" alt="">
-                            </div> -->
+          
+
+                            <div class="inputSendBlog">
+                                <input type="text" placeholder="What's new width you?">
+                                <img src="img/send.png" alt="">
+                            </div>
+                            <div class="blogWrap">
+                                <div class="blogPosts">
 
 
+
+                                </div>
+                            </div>
+                        </div>
+                        <div class="profileInfoTags">
+                            <div class="about">
+                                <span>About</span>
+                                <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Rerum, dolor?</p>
+                            </div>
+                            <div class="purpose">
+
+                            </div>
+                            <div class="profession">
+
+                            </div>
+                            <div class="sport">
+
+                            </div>
                         </div>
                     </div>
+            
                     <div class="mainPanel">
                         <div class="mainPanelItem map main">
                             <img src="img/lupa.svg" style="width: 26px;" alt="">
                         </div>
+                        <!-- <div class="mainPanelItem recomendations main">
+                            <img src="img/recomendations.svg" style="width: 26px;" alt="">
+                        </div> -->
                         <div class="mainPanelItem chat main">
                             <img src="img/iconChat.svg" alt="">
                         </div>
@@ -487,7 +577,10 @@
                             <img src="img/filters.png" alt="">
                         </div>
                     </div>
-
+                    <div class="search">
+                        <img src="img/lupa_sub.svg" alt="">
+                        <input type="text" placeholder="Search">
+                    </div>
                     <div class="allUsersWrap">
                         <div class="allUsers">
 
@@ -539,6 +632,9 @@
                         <div class="mainPanelItem active map users">
                             <img src="img/lupa.svg" style="width: 26px;" alt="">
                         </div>
+                        <!-- <div class="mainPanelItem recomendations users">
+                            <img src="img/recomendations.svg" style="width: 26px;" alt="">
+                        </div> -->
                         <div class="mainPanelItem chat users">
                             <img src="img/iconChat.svg" alt="">
                         </div>
@@ -655,6 +751,9 @@
                         <div class="mainPanelItem map conversations">
                             <img src="img/lupa.svg" style="width: 26px;" alt="">
                         </div>
+                        <!-- <div class="mainPanelItem recomendations conversations">
+                            <img src="img/recomendations.svg" style="width: 26px;" alt="">
+                        </div> -->
                         <div class="mainPanelItem active chat conversations">
                             <img src="img/iconChat.svg" alt="">
                         </div>
@@ -744,73 +843,7 @@
                     <div class="messagesWrap">
                         <div class="messages">
 
-                            <!-- <div class="message">
-                                <div class="photo">
-                                    <img src="img/girl1.png" alt="">
-                                </div>
-                                <div class="text">
-                                    <p>Тут находится сообщение Тут находится сообщение Тут находится сообщение</p>
-                                </div>
-                            </div>
-
-                            <div class="message me">
-                                <div class="photo">
-                                    <img src="img/girl1.png" alt="">
-                                </div>
-                                <div class="text">
-                                    <p>Тут находится сообщение Тут нах</p>
-                                </div>
-                            </div>
-
-                            <div class="message">
-                                <div class="photo">
-                                    <img src="img/girl1.png" alt="">
-                                </div>
-                                <div class="text">
-                                    <p>Тут находится сообщение Тут находится сообщение Тут находится сообщение</p>
-                                    <span class="time">21:22</span>
-                                </div>
-                            </div>
-
-                            <div class="message me">
-                                <div class="photo">
-                                    <img src="img/girl1.png" alt="">
-                                </div>
-                                <div class="text">
-                                    <p>Тут находится сообщение Тут нах</p>
-                                    <span class="time">21:22</span>
-                                </div>
-                            </div>
-
-                            <div class="message">
-                                <div class="photo">
-                                    <img src="img/girl1.png" alt="">
-                                </div>
-                                <div class="text">
-                                    <p>Тут находится сообщение Тут находится сообщение Тут находится сообщение</p>
-                                    <span class="time">21:22</span>
-                                </div>
-                            </div>
-
-                            <div class="message me">
-                                <div class="photo">
-                                    <img src="img/girl1.png" alt="">
-                                </div>
-                                <div class="text">
-                                    <p>Тут находится сообщение Тут нах</p>
-                                    <span class="time">21:22</span>
-                                </div>
-                            </div>
-
-                            <div class="message me">
-                                <div class="photo">
-                                    <img src="img/girl1.png" alt="">
-                                </div>
-                                <div class="text">
-                                    <p>Тут находится сообщение Тут нах</p>
-                                    <span class="time">21:22</span>
-                                </div>
-                            </div> -->
+                            
 
                         </div>
                     </div>
@@ -827,6 +860,9 @@
                         <div class="mainPanelItem map chatWindow">
                             <img src="img/lupa.svg" style="width: 26px;" alt="">
                         </div>
+                        <!-- <div class="mainPanelItem recomendations chatWindow">
+                            <img src="img/recomendations.svg" style="width: 26px;" alt="">
+                        </div> -->
                         <div class="mainPanelItem active chat chatWindow">
                             <img src="img/iconChat.svg" alt="">
                         </div>
@@ -901,7 +937,8 @@
                         <div class="left">
                             <div class="profilePhotoWrap">
                                 <div class="photo_box">
-                                    <img src="img/logo_profile.png" alt="">
+                                    <div class="preElement active" style="width: 90px; height: 90px"></div>
+                                    <img style="display: none" src="" alt="">
                                 </div>
                                 <!-- <div class="upload">
                                     <img src="img/icon-camera.svg" alt="">
@@ -909,8 +946,8 @@
                             </div>
 
                             <div class="name_age_box">
-                                <span class="name">Anna Jonson</span>
-                                <span class="age">20</span>
+                                <span class="name"></span>
+                                <span class="age"></span>
                             </div>
                             
                         </div>
@@ -928,6 +965,36 @@
                         </div>
                     </div>
 
+                    <div class="commentsModal">
+                        <div class="close">
+                            <img src="img/closed.svg" alt="">
+                        </div>
+
+                        <div class="blogPost">
+                            <div class="photo">
+                                <img src="" alt="">
+                            </div>
+                            <div class="info">
+                                <span>${myMotokoObject.name}</span>
+                                <p>${postInput.value}</p>
+                                
+                            </div>
+                        </div>
+
+                        <div class="commentsWrap">
+                            <div class="comments">
+                                <!-- <p>There are no comments yet</p> -->
+                            </div>
+                        </div>
+
+                        <div class="textArea">
+                            <input type="text" placeholder="Write a comment">
+                            <div class="sen">
+                                <img src="img/send.png"" alt="">
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="profile_tabs_photos">
                         <div class="change photos active">
                             <img src="img/pv.svg" alt="">
@@ -940,13 +1007,33 @@
                         </div>
                     </div>
 
-                    <div class="selectPhotos">
-                        <div class="selectPhotosWrap">
+                    <div class="miniRoll">
+                        <div class="selectPhotos">
+                            <div class="selectPhotosWrap">
+    
+                            </div>
+     
+                        </div>
+                        <div class="profileBlog">
+                            <div class="sureRepost">
+                                <div class="remove">
+                                    <img src="img/closed.svg">
+                                </div>
+                                <span>Repost this post?</span>
+                                <div class="btns">
+                                    <button class="yes">Yes</button>
+                                    <button class="no">No</button>
+                                </div>
+                            </div>
+                            <div class="blogWrap">
+                                <div class="blogPosts">
 
-                            <!-- <div class="child">
-                                <img src="img/girl1.png" alt="">
-                            </div> -->
 
+
+                                </div>
+                            </div>
+                        </div>
+                        <div class="profileInfoTags">
 
                         </div>
                     </div>
@@ -957,6 +1044,9 @@
                         <div class="mainPanelItem map otherUser">
                             <img src="img/lupa.svg" style="width: 26px;" alt="">
                         </div>
+                        <!-- <div class="mainPanelItem recomendations otherUser">
+                            <img src="img/recomendations.svg" style="width: 26px;" alt="">
+                        </div> -->
                         <div class="mainPanelItem chat otherUser">
                             <img src="img/iconChat.svg" alt="">
                         </div>
@@ -1085,6 +1175,9 @@
                         <div class="mainPanelItem map community">
                             <img src="img/lupa.svg" style="width: 26px;" alt="">
                         </div>
+                        <!-- <div class="mainPanelItem recomendations community">
+                            <img src="img/recomendations.svg" style="width: 26px;" alt="">
+                        </div> -->
                         <div class="mainPanelItem chat community">
                             <img src="img/iconChat.svg" alt="">
                         </div>
@@ -1102,6 +1195,91 @@
                 </div>
 
 
+
+
+
+
+
+
+
+
+
+                <div class="tab recomend">
+
+
+           
+
+                    <div class="settings_modal">
+                        <div class="settings_item logout">
+                            <span>Logout</span>
+                        </div>
+                        <div class="settings_item delete">
+                            <span>Delete account</span>
+                        </div>
+                    </div>
+
+
+                    <div class="firs_logo">
+                        <!-- <div class="gear right">
+                            <img src="img/gear.svg" alt="">
+                        </div> -->
+                        <img class="diamond" event="back" value="5" src="img/tingram.png" alt="diamond">
+                        <!-- <div class="gear">
+                            <img src="img/filters.png" alt="">
+                        </div> -->
+                    </div>
+
+                    <div class="globalWrap">
+                        <div class="recomendationsWrap">
+                            <div class="buttons">
+                                <div class="media">
+                                    <img src="img/pv.svg" alt="">
+                                </div>
+                                <div class="changer">
+                                    <span>Recommendations</span>
+                                </div>
+                                <div class="blog">
+                                    <img src="img/pv2.svg" alt="">
+                                </div>
+                            </div>
+                            <div class="mediaAndPosts">
+                                <div class="mediaWrap">
+                                    <div class="items">
+
+                                    </div>
+                                </div>
+                                <div class="postsWrap">
+
+                                </div>
+                            </div>
+                        </div>
+                        <div class="subscribersWrap">
+
+                        </div>
+                    </div>
+
+                    <div class="mainPanel">
+                        <div class="mainPanelItem map rec">
+                            <img src="img/lupa.svg" style="width: 26px;" alt="">
+                        </div>
+                        <!-- <div class="mainPanelItem recomendations active rec">
+                            <img src="img/recomendations.svg" style="width: 26px;" alt="">
+                        </div> -->
+                        <div class="mainPanelItem chat rec">
+                            <img src="img/iconChat.svg" alt="">
+                        </div>
+                        <!-- <div class="mainPanelItem active poker otherUser">
+                            <img src="img/iconPoker.svg" alt="">
+                        </div>
+                        <div class="mainPanelItem media otherUser">
+                            <img src="img/iconSocialMedia.svg" alt="">
+                        </div> -->
+                        <div class="mainPanelItem profile rec">
+                            <img src="img/iconUser.svg" alt="">
+                        </div>
+                          
+                    </div>
+                </div>
 
 
 
